@@ -1,0 +1,798 @@
+[
+  {
+    "slug": "laser-hair-remove",
+    "category": "laser",
+    "title": "Laser Hair Removal",
+    "description": "Enjoy long-lasting smooth skin with advanced laser hair removal. Our precision technology targets hair follicles while protecting the surrounding skin, helping reduce unwanted hair growth safely, comfortably, and effectively for beautifully silky skin.",
+    "hero_image": "/Assets/laser-hair-removal-hero1.jpeg",
+    "list_title": "Our Laser Hair Removal Treatments",
+    "list_copy": "Choose the treatment that best suits your skin goals.",
+    "cta_title": "Say Goodbye to Unwanted Hair",
+    "cta_copy": "Schedule your Laser Hair Removal session today and achieve smoother skin with safe, effective, and long-lasting results.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Silky Smooth Confidence",
+        "description": "Long-lasting hair reduction with advanced laser technology"
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Fast Sessions",
+        "description": "Quick, comfortable treatments with minimal downtime."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Safe & Precise",
+        "description": "Suitable for most skin types and treatment areas."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Smooth Skin",
+        "description": "Enjoy silky, hair-free skin with lasting confidence."
+      }
+    ],
+    "aliases": [
+      "laser-hair",
+      "hair removal",
+      "hair-remove"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "laser-vain",
+    "category": "laser-vain",
+    "title": "Laser Vein Removal",
+    "description": "Reveal smoother, clearer skin with advanced Laser Vein Removal. Using precision laser technology, this treatment safely targets visible spider veins and small vascular lesions, fading unwanted veins without surgery or downtime. Enjoy naturally even-toned skin, renewed confidence, and long-lasting, beautifully refined results. ✨",
+    "hero_image": "/Assets/Laser Vein Removal.png",
+    "list_title": "Our Laser Vein Removal",
+    "list_copy": "Choose the Laser Vein Removal",
+    "cta_title": "Ready for Clearer Beautiful Skin?",
+    "cta_copy": "Book your Laser Vein Removal treatment today and enjoy smoother, vein-free skin with long-lasting, natural-looking results.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Precision Vein Removal",
+        "description": "Removes dirt, oil and impurities from pores."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Lasting Results",
+        "description": "Enjoy clearer skin longer."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Clear Complexion",
+        "description": "Restores smooth, flawless skin."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Fast Recovery",
+        "description": "Minimal downtime, maximum comfort."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "pigmentation",
+    "category": "pigmentation",
+    "title": "Pigmentation",
+    "description": "Restore your skin's natural radiance with our advanced Pigmentation Treatments. Using cutting-edge technologies and personalized care, we effectively target sun damage, melasma, age spots, post-inflammatory pigmentation, and uneven skin tone. Our treatments work deep within the skin to reduce excess melanin, promote healthy skin renewal, and reveal a brighter, smoother, more even complexion with long-lasting, natural-looking results.",
+    "hero_image": "/Assets/pigmentation...png",
+    "list_title": "Our Pigmentation Treatments",
+    "list_copy": "Choose the treatment that best suits your skin goals.",
+    "cta_title": "Ready for Brighter Even-Toned Skin?",
+    "cta_copy": "Book your Pigmentation Treatment today and reveal a clearer, smoother, more radiant complexion with advanced skin-brightening technology.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Sun Spots",
+        "description": "Fade sun-induced discoloration for brighter, more even-toned skin."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Melasma",
+        "description": "Target stubborn melasma with advanced skin-brightening treatments."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Dark Spots",
+        "description": "Reduce age spots and post-acne marks for clearer skin."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Uneven Tone",
+        "description": "Restore a radiant, balanced complexion with customized pigmentation care."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "tattoo-removal",
+    "category": "tattoo",
+    "title": "Tattoo Removal",
+    "description": "Erase unwanted tattoos with advanced laser technology designed to safely break down stubborn ink while protecting your skin. Our precision treatment targets all tattoo sizes and colors, helping restore smooth, clear, naturally beautiful skin with minimal downtime and long-lasting results. Reveal a fresh start with confidence. ✨",
+    "hero_image": "/Assets/tatto-booster.png",
+    "list_title": "Our Tattoo Removal Treatments",
+    "list_copy": "Choose the treatment that best suits your skin goals.",
+    "cta_title": "Ready for Clear tattoo removal?",
+    "cta_copy": "Book your Tattoo Removal treatment today and safely fade unwanted ink for smoother, clearer, and more confident skin.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Precision Removal",
+        "description": "Advanced laser targets tattoo ink safely."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Safe Technology",
+        "description": "Protects surrounding healthy skin."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Multi-Color Removal",
+        "description": "Treats black and colored tattoos."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Lasting Results",
+        "description": "Fade unwanted tattoos with confidence."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "laser-fungus",
+    "category": "laser-fungus",
+    "title": "Precision Laser Fungus Removal",
+    "description": "Restore clear, healthy with advanced laser technology that targets fungal infections at the source. This safe, non-invasive treatment penetrates deep the to eliminate fungus, promote healthy growth, and improve the appearance of damaged —all without surgery or lengthy downtime. Experience stronger, healthier, naturally beautiful with lasting results. ✨",
+    "hero_image": "/Assets/Laser-Fungus-10.png",
+    "list_title": "Our Laser Fungus Removal Treatments",
+    "list_copy": "Choose the treatment that best suits your skin goals.",
+    "cta_title": "Ready for Healthy Fungus-Free Skin?",
+    "cta_copy": "Book your Fungus Removal treatment today and restore clear, healthy skin with advanced antifungal care and lasting results.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Fungus Elimination",
+        "description": "Targets fungal infections at the source."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Skin Healing",
+        "description": "Restores healthy, smooth skin naturally."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Lasting Protection",
+        "description": "Helps prevent future fungal recurrence"
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Healthy Skin",
+        "description": "Supports long-term skin health and balance."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "hifu-machine",
+    "category": "hifu-machine",
+    "title": "HIFU-MACHINE",
+    "description": "Experience the power of advanced High-Intensity Focused Ultrasound (HIFU) technology for natural, non-surgical skin lifting and rejuvenation. HIFU precisely targets the deep structural layers of the skin to stimulate collagen production, helping lift sagging skin, improve firmness, redefine facial contours, and smooth fine lines—all without surgery or downtime. Achieve a tighter, more youthful appearance with long-lasting, natural-looking results tailored to your skin's needs.",
+    "hero_image": "/Assets/elexir-machine1.png",
+    "list_title": "Our HIFU-Machine",
+    "list_copy": "Choose the treatment that best suits your skin goals.",
+    "cta_title": "Ready to Lift and Rejuvenate Your Skin?",
+    "cta_copy": "Book your HIFU treatment today and enjoy firmer, tighter, naturally youthful skin with advanced non-surgical lifting technology.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Skin Lifting",
+        "description": "Lifts sagging skin naturally."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Collagen Boost",
+        "description": "Stimulates natural collagen production."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Wrinkle Reduction",
+        "description": "Smooths fine lines and wrinkles."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Non-Surgical Tightening",
+        "description": "Firm, youthful skin without surgery."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "botox",
+    "category": "Botox",
+    "title": "Botox",
+    "description": "Reduce fine lines and wrinkles with advanced Botox treatments that relax targeted facial muscles for a smoother, naturally youthful appearance with long-lasting, natural-looking results.",
+    "hero_image": "/Assets/Bootox.png",
+    "list_title": "Our Botox Treatments",
+    "list_copy": "Choose The Botox That Best Suits Your Skin Goals.",
+    "cta_title": "Ready for Smoother Younger-Looking Skin?",
+    "cta_copy": "Book your Botox treatment today and enjoy a refreshed, naturally youthful appearance with smoother skin and long-lasting results.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Natural Results",
+        "description": "Smooth, refreshed, never overdone."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Jaw Slimming",
+        "description": "Enhances facial balance naturally."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Expression Control",
+        "description": "Softens dynamic facial lines."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Youthful Glow",
+        "description": "Refreshes revitalizes appearance."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "filler",
+    "category": "filler",
+    "title": "Fillers",
+    "description": "Enhance your natural beauty with premium Dermal Filler treatments designed to restore lost volume, smooth facial lines, and refine your facial contours. Using high-quality hyaluronic acid fillers, our expert practitioners create balanced, natural-looking results that rejuvenate your appearance while preserving your unique features. Enjoy a refreshed, youthful look with immediate, long-lasting results and minimal downtime.",
+    "hero_image": "/Assets/Filler-banner.png",
+    "list_title": "Our Filler Treatments",
+    "list_copy": "Choose the filler that best suits your skin goals.",
+    "cta_title": "Ready to Enhance Your Natural Beauty?",
+    "cta_copy": "Book your Filler Treatment Today And Restore Youthful Volume, Define Facial Contours, And Enjoy Beautifully Natural-Looking Results.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Volume Restoration",
+        "description": "Restore youthful facial volume."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Facial Contouring",
+        "description": "Enhance natural facial definition."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Lip Enhancement",
+        "description": "Create fuller, balanced lips."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Wrinkle Filling",
+        "description": "Smooth deep lines naturally."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "bbl-injection",
+    "category": "BBL",
+    "title": "BBL Injection",
+    "description": "Eachieve fuller, beautifully contoured curves with advanced BBL injections designed to enhance shape, volume, and balance without surgery. This minimally invasive treatment helps sculpt the buttocks, improve projection, and create smooth, natural-looking contours tailored to your body. With expert precision and premium-quality products, you can enjoy long-lasting, elegant results with minimal downtime—restoring confidence and enhancing your silhouette from every angle.",
+    "hero_image": "/Assets/Hero-BBL.jpeg",
+    "list_title": "Our BBL Injection",
+    "list_copy": "Choose The BBL Injection That Best Suits Your Skin Goals.",
+    "cta_title": "Ready to Enhance Your Curves?",
+    "cta_copy": "Book your BBL Injection treatment today and enjoy fuller, beautifully contoured curves with natural-looking, long-lasting results.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Volume Enhancement",
+        "description": "Enhances curves with natural volume."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Body Contouring",
+        "description": "Shapes and defines your silhouette."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Natural Results",
+        "description": "Achieve balanced, realistic enhancement."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Long-Lasting Beauty",
+        "description": "Smooth, fuller contours that last."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "sclerotherapy-injection",
+    "category": "sclerotherapy-Injection",
+    "title": "Sclerotherapy Injection",
+    "description": "Restore smoother, clearer legs with our advanced Sclerotherapy Injection treatments. This minimally invasive procedure effectively treats spider veins and selected superficial varicose veins by sealing affected veins, allowing them to gradually fade while improving the appearance of your skin. Performed by experienced professionals, sclerotherapy delivers safe, natural-looking results with minimal downtime, helping you enjoy healthier-looking legs with renewed confidence.",
+    "hero_image": "/Assets/Sclerotherapy-injection.png",
+    "list_title": "Our Sclerotherapy Injection",
+    "list_copy": "Choose the Sclerotherapy-injection that best suits your skin goals.",
+    "cta_title": "Ready for Smooth Vein-Free Legs?",
+    "cta_copy": "Book your Sclerotherapy Injection treatment today and enjoy clearer, healthier-looking legs with safe, minimally invasive care.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Spider Veins",
+        "description": "Effectively treats visible spider veins."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Clearer Legs",
+        "description": "Restores smooth, even-toned skin."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Lasting Results",
+        "description": "Reveal healthier, more confident legs."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Vein Closure",
+        "description": "Seals damaged veins safely."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "prp",
+    "category": "PRP",
+    "title": "PRP",
+    "description": "PRP (Platelet-Rich Plasma) Hair Rejuvenation Therapy is an advanced regenerative treatment that uses your body's own platelet-rich plasma, packed with powerful growth factors, to naturally stimulate hair follicles and promote healthier hair growth. This minimally invasive procedure helps reduce hair thinning and shedding, improve scalp health, strengthen weak follicles, and increase hair thickness and density. PRP also enhances blood circulation to the scalp, encouraging stronger, fuller, and healthier-looking hair with natural, long-lasting results and minimal downtime. Each treatment is tailored to your individual hair restoration needs for safe, effective, and naturally revitalized hair.",
+    "hero_image": "/Assets/PRP-Banner.png",
+    "list_title": "Our Lash Artist Treatments",
+    "list_copy": "Choose the Lash Artist that best suits your skin goals.",
+    "cta_title": "Ready For Radiant Skin?",
+    "cta_copy": "Book your HydraFacial treatment today and enjoy healthier, smoother and glowing skin.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Deep Cleansing",
+        "description": "Removes dirt, oil and impurities from pores."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Instant Glow",
+        "description": "Leaves your skin radiant immediately."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Hydration",
+        "description": "Restores moisture and skin elasticity."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Healthy Skin",
+        "description": "Supports long-term skin health and balance."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "iv-drips",
+    "category": "iv-drips",
+    "title": "IV-Drips",
+    "description": "Restore your body from within with customized IV drips that deliver powerful hydration and essential nutrients directly into your bloodstream. Enjoy rapid absorption, increased energy, glowing skin, enhanced recovery, and lasting wellness.",
+    "hero_image": "/Assets/IV-DRIPS.jpeg",
+    "list_title": "Our HydraFacial Treatments",
+    "list_copy": "Choose the treatment that best suits your skin goals.",
+    "cta_title": "Ready For Radiant Skin?",
+    "cta_copy": "Book your HydraFacial treatment today and enjoy healthier, smoother and glowing skin.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Deep Cleansing",
+        "description": "Removes dirt, oil and impurities from pores."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Instant Glow",
+        "description": "Leaves your skin radiant immediately."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Hydration",
+        "description": "Restores moisture and skin elasticity."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Healthy Skin",
+        "description": "Supports long-term skin health and balance."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "aesthetic-gyne",
+    "category": "Aesthetic-Gyn",
+    "title": "Aesthetic Gynecology",
+    "description": "Restore confidence and intimate wellness with our advanced Aesthetic Gynecology treatments. Using innovative, minimally invasive technologies, we enhance hydration, elasticity, tissue health, and overall feminine rejuvenation—delivering natural-looking results with expert, discreet care.",
+    "hero_image": "/Assets/Aesthetic Gynecology-banner.png",
+    "list_title": "Our Aesthetic Gynecology Treatments",
+    "list_copy": "Choose the treatment that best suits your skin goals.",
+    "cta_title": "Ready to Feel Your Best?",
+    "cta_copy": "Book your Aesthetic Gynecology consultation today and discover personalized treatments designed to restore comfort, confidence, and intimate wellness.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Intimate Rejuvenation",
+        "description": "Restore youthful comfort, confidence, and feminine wellness."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Vaginal Tightening",
+        "description": "Enhance firmness, elasticity, and intimate function with advanced treatments."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Confidence & Restoration",
+        "description": "Personalized solutions for natural rejuvenation and lasting confidence."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Intimate Care",
+        "description": "Advanced treatments for lasting comfort and feminine well-being"
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "threads",
+    "category": "threads",
+    "title": "Threads",
+    "description": "Enjoy long-lasting smooth skin with advanced laser hair removal. Our precision technology targets hair follicles while protecting the surrounding skin, helping reduce unwanted hair growth safely, comfortably, and effectively for beautifully silky skin.",
+    "hero_image": "/Assets/Booster-Threadss.jpeg",
+    "list_title": "Our Threads Treatments",
+    "list_copy": "Choose the treatment that best suits your skin goals.",
+    "cta_title": "Ready For Radiant Skin?",
+    "cta_copy": "Book your HydraFacial treatment today and enjoy healthier, smoother and glowing skin.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Deep Cleansing",
+        "description": "Removes dirt, oil and impurities from pores."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Instant Glow",
+        "description": "Leaves your skin radiant immediately."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Hydration",
+        "description": "Restores moisture and skin elasticity."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Healthy Skin",
+        "description": "Supports long-term skin health and balance."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "hydrafacial",
+    "category": "hydrafacial",
+    "title": "HydraFacial",
+    "description": "Reveal healthier, brighter, and deeply hydrated skin with our advanced HydraFacial treatments. Designed to cleanse, exfoliate, extract impurities, and nourish your skin for an instant glow.",
+    "hero_image": "/Assets/hydrafacial-banner.jpg",
+    "list_title": "Our HydraFacial Treatments",
+    "list_copy": "Choose the treatment that best suits your skin goals.",
+    "cta_title": "Ready For Radiant Skin?",
+    "cta_copy": "Book your HydraFacial treatment today and enjoy healthier, smoother and glowing skin.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Deep Cleansing",
+        "description": "Removes dirt, oil and impurities from pores."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Instant Glow",
+        "description": "Leaves your skin radiant immediately."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Hydration",
+        "description": "Restores moisture and skin elasticity."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Healthy Skin",
+        "description": "Supports long-term skin health and balance."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "mesotherapy-treatment",
+    "category": "mesotherapy",
+    "title": "Mesotheraby Treatment",
+    "description": "Mesotherapy is a minimally invasive skin rejuvenation treatment that delivers a customized blend of hyaluronic acid, vitamins, amino acids, antioxidants, and nourishing nutrients directly into the skin. This advanced procedure deeply hydrates, stimulates collagen and elastin production, improves skin texture, and restores a healthy, radiant glow. Suitable for the face, neck, décolletage, and hands, Mesotherapy helps reduce fine lines, dullness, dehydration, and early signs of aging while promoting smoother, firmer, and naturally refreshed skin with little to no downtime. Each treatment is tailored to your individual skin concerns to achieve safe, long-lasting, and natural-looking results.",
+    "hero_image": "/Assets/Mesotheraby Treatment.png",
+    "list_title": "Our Mesotherapy Treatments",
+    "list_copy": "Choose the Mesotherapy treatment that best suits your skin goals.",
+    "cta_title": "Ready for Radiant Youthful Skin?",
+    "cta_copy": "Book your Mesotherapy Injection treatment today and nourish your skin from within for a smoother, firmer, and naturally glowing complexion.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Skin Rejuvenation",
+        "description": "Revitalize dull skin with nourishing vitamins and antioxidants."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Deep Hydration",
+        "description": "Restore moisture for smoother, softer, and healthier-looking skin."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Collagen Boost",
+        "description": "Stimulate natural collagen production to improve firmness and elasticity."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Bright & Even Tone",
+        "description": "Reduce pigmentation and reveal a radiant, glowing complexion."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "skin-booster",
+    "category": "Skin-Booster",
+    "title": "Skin Booster",
+    "description": "Reveal healthier, glowing skin with our premium Skin Booster treatment. Designed to deeply hydrate and rejuvenate the skin at the cellular level, it enhances collagen renewal, improves firmness, smooths fine lines, minimizes pores, and restores a radiant, youthful complexion. Experience long-lasting hydration, refined skin texture, and naturally beautiful results that shine from within.",
+    "hero_image": "/Assets/Skin-booster.png",
+    "list_title": "Our Skin Booster Treatments",
+    "list_copy": "Choose the treatment that best suits your skin goals.",
+    "cta_title": "Ready to Transform Your Skin?",
+    "cta_copy": "Book your Skin Booster treatment today and reveal deeply hydrated, smoother, firmer, and naturally radiant skin.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Deep Hydration",
+        "description": "Restore intense moisture deep within the skin for a plump, healthy, and refreshed complexion."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Collagen Boost",
+        "description": "Stimulates natural collagen production to improve firmness, elasticity, and skin resilience."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Smooth Texture",
+        "description": "Refines skin texture, softens fine lines, and enhances overall skin smoothness."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Long-Lasting Results",
+        "description": "Provides gradual, natural-looking improvements with results that continue to develop over time."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "cupping-therapy",
+    "category": "Cupping Therapy",
+    "title": "Cupping Therapy",
+    "description": "Experience the art of facial rejuvenation with precision Botox treatments that smooth forehead lines, crow's feet, and frown lines, revealing naturally refreshed beauty with little to no downtime.",
+    "hero_image": "/Assets/cupping-therapy.jpeg",
+    "list_title": "Our HydraFacial Treatments",
+    "list_copy": "Choose the treatment that best suits your skin goals.",
+    "cta_title": "Ready For Radiant Skin?",
+    "cta_copy": "Book your HydraFacial treatment today and enjoy healthier, smoother and glowing skin.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Deep Cleansing",
+        "description": "Removes dirt, oil and impurities from pores."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Instant Glow",
+        "description": "Leaves your skin radiant immediately."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Hydration",
+        "description": "Restores moisture and skin elasticity."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Healthy Skin",
+        "description": "Supports long-term skin health and balance."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "lash-artist",
+    "category": "lash",
+    "title": "Lash Artist",
+    "description": "Create stunning, customized lashes with expert precision. From soft natural elegance to bold glamorous volume, every set is tailored to enhance your eye shape, delivering flawless, lightweight, and long-lasting beauty.",
+    "hero_image": "/Assets/lashes-background.jpeg",
+    "list_title": "Our Lash Artist Treatments",
+    "list_copy": "Choose The Lash Artist That Best Suits Your Eyes.",
+    "cta_title": "Ready for Stunning Lashes?",
+    "cta_copy": "Book your lash appointment today and enjoy fuller, longer, beautifully defined lashes that enhance your natural beauty.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Safe & Professional",
+        "description": "Applied with premium products and expert techniques for maximum comfort."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Natural Beauty",
+        "description": "Enhance your eyes with soft, elegant lashes tailored to your style."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Custom Lash Sets",
+        "description": "Choose from Classic, Hybrid, or Volume lashes for your perfect look."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Long-Lasting Wear",
+        "description": "Enjoy lightweight, durable lash extensions that stay beautiful for weeks."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "permanent-makeup",
+    "category": "permanent-makeup",
+    "title": "Permanent Makeup",
+    "description": "Restore youthful volume, sculpt elegant contours, and enhance your natural beauty with premium dermal fillers. Achieve beautifully balanced, refined features and smooth, youthful skin through precision aesthetic artistry with immediate, natural-looking results.",
+    "hero_image": "/Assets/powder brows booster-makeup.png",
+    "list_title": "Our Permanent Makeup Treatments",
+    "list_copy": "Choose the Permanent Makeup treatment that best suits your skin goals.",
+    "cta_title": "Ready for Flawless Beauty?",
+    "cta_copy": "Book your Permanent Makeup appointment today and wake up with perfectly defined, beautiful features every day.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Deep Cleansing",
+        "description": "Removes dirt, oil and impurities from pores."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Instant Glow",
+        "description": "Leaves your skin radiant immediately."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Hydration",
+        "description": "Restores moisture and skin elasticity."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Healthy Skin",
+        "description": "Supports long-term skin health and balance."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "bb-glow-skin",
+    "category": "BBGlow",
+    "title": "BB Glow Skin",
+    "description": "BB Glow Skin is an advanced skin-enhancing treatment designed to brighten, hydrate, and rejuvenate the complexion from within. Using premium BB Glow serums infused with nourishing vitamins, antioxidants, and skin-loving ingredients, the treatment helps improve uneven skin tone, reduce the appearance of dullness and minor imperfections, and create a naturally radiant, flawless-looking finish.",
+    "hero_image": "/Assets/Bootox.png",
+    "list_title": "Our BB Glow Treatments",
+    "list_copy": "Choose the treatment that best suits your skin goals.",
+    "cta_title": "Ready For Radiant Skin?",
+    "cta_copy": "Book your BB Glow treatment today and enjoy brighter, smoother, and naturally glowing skin with a flawless glass-skin finish.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Deep Hydration",
+        "description": "Boosts moisture levels for softer, plumper, healthier-looking skin."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Even Skin Tone",
+        "description": "Helps reduce dullness and improves uneven skin tone and texture."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Skin Renewal",
+        "description": "Refreshes skin appearance and supports a youthful natural glow."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "BB Glow Skin Perfection",
+        "description": "Brightens, hydrates, and enhances your skin with a natural radiant finish."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  },
+  {
+    "slug": "cosmatic-product",
+    "category": "loo",
+    "title": "Cosmetic Product",
+    "description": "",
+    "hero_image": "/Assets/cosmatic-booster.jpeg",
+    "list_title": "Our HydraFacial Treatments",
+    "list_copy": "Choose the treatment that best suits your skin goals.",
+    "cta_title": "Ready For Radiant Skin?",
+    "cta_copy": "Book your HydraFacial treatment today and enjoy healthier, smoother and glowing skin.",
+    "cta_url": "/contact",
+    "benefits": [
+      {
+        "icon": "bi-droplet-fill",
+        "title": "Deep Cleansing",
+        "description": "Removes dirt, oil and impurities from pores."
+      },
+      {
+        "icon": "bi-stars",
+        "title": "Instant Glow",
+        "description": "Leaves your skin radiant immediately."
+      },
+      {
+        "icon": "bi-water",
+        "title": "Hydration",
+        "description": "Restores moisture and skin elasticity."
+      },
+      {
+        "icon": "bi-shield-check",
+        "title": "Healthy Skin",
+        "description": "Supports long-term skin health and balance."
+      }
+    ],
+    "aliases": [],
+    "is_active": true
+  }
+]
