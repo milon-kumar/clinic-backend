@@ -100,11 +100,16 @@ class ServiceController extends Controller
             'description' => ['nullable', 'string'],
             'durationMinutes' => ['nullable', 'integer', 'min:10'],
             'basePricePence' => ['nullable', 'integer', 'min:0'],
+            'price' => ['nullable', 'numeric', 'min:0'],
             'appointmentAmountPence' => ['nullable', 'integer', 'min:0'],
             'appointmentAmount' => ['nullable', 'numeric', 'min:0'],
             'images' => ['nullable', 'array'],
             'images.*' => ['nullable', 'string'],
             'packages' => ['nullable', 'array'],
+            'packages.*.title' => ['nullable', 'string', 'max:120'],
+            'packages.*.sessions' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'packages.*.discountPercent' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'packages.*.pricePence' => ['nullable', 'integer', 'min:0'],
             'benefits' => ['nullable', 'array'],
             'faqs' => ['nullable', 'array'],
             'isActive' => ['nullable', 'boolean'],
@@ -134,7 +139,9 @@ class ServiceController extends Controller
             'treatment_type' => $data['treatmentType'] ?? null,
             'description' => $data['description'] ?? null,
             'duration_minutes' => $data['durationMinutes'] ?? 60,
-            'base_price_pence' => $data['basePricePence'] ?? 0,
+            'base_price_pence' => array_key_exists('basePricePence', $data)
+                ? (int) $data['basePricePence']
+                : (int) round(((float) ($data['price'] ?? 0)) * 100),
             'appointment_amount_pence' => array_key_exists('appointmentAmountPence', $data)
                 ? (int) $data['appointmentAmountPence']
                 : (int) round(($data['appointmentAmount'] ?? 0) * 100),
@@ -153,12 +160,23 @@ class ServiceController extends Controller
     {
         if (array_key_exists('packages', $data)) {
             $service->packages()->delete();
+            $unit = (int) $service->base_price_pence;
             foreach ($data['packages'] ?? [] as $pkg) {
+                $sessions = max(1, min(20, (int) ($pkg['sessions'] ?? 1)));
+                $discount = min(100, max(0, (int) ($pkg['discountPercent'] ?? 0)));
+                $computed = $discount >= 100
+                    ? 0
+                    : (int) intdiv($unit * $sessions * (100 - $discount) + 50, 100);
+                $hasExplicitPrice = array_key_exists('pricePence', $pkg) && $pkg['pricePence'] !== null;
+                $price = $hasExplicitPrice ? (int) $pkg['pricePence'] : $computed;
+                $title = trim((string) ($pkg['title'] ?? ''));
+
                 ServicePackage::create([
                     'service_id' => $service->id,
-                    'title' => $pkg['title'] ?? 'Package',
-                    'sessions' => $pkg['sessions'] ?? 1,
-                    'price_pence' => $pkg['pricePence'] ?? 0,
+                    'title' => $title !== '' ? $title : ($sessions === 1 ? '1 Treatment' : $sessions.' Treatments'),
+                    'sessions' => $sessions,
+                    'discount_percent' => $discount,
+                    'price_pence' => $price,
                 ]);
             }
         }

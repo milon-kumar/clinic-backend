@@ -144,28 +144,73 @@ class ClinicCatalogService
     }
 
     /**
-     * @return array{unitPricePence: int, subtotalPence: int, tierDiscountPercent: int}
+     * @return array{
+     *     unitPricePence: int,
+     *     listSubtotalPence: int,
+     *     subtotalPence: int,
+     *     discountPence: int,
+     *     tierDiscountPercent: int
+     * }
      */
     public function resolvePrice(int $clinicId, int $serviceId, int $quantity): array
     {
-        $service = Service::findOrFail($serviceId);
+        $quantity = max(1, min(20, $quantity));
+        $service = Service::query()->with('packages')->findOrFail($serviceId);
 
         $clinicService = ClinicService::query()
             ->where('clinic_id', $clinicId)
             ->where('service_id', $serviceId)
             ->first();
 
-        $unitPrice = $clinicService?->price_pence ?? $service->base_price_pence;
-        $tierDiscount = $this->tierDiscountPercent($quantity);
-
-        $subtotal = $unitPrice * $quantity;
-        $discountAmount = (int) round($subtotal * ($tierDiscount / 100));
+        $unitPrice = (int) ($clinicService?->price_pence ?? $service->base_price_pence);
+        $listSubtotal = $unitPrice * $quantity;
+        $discountPercent = $this->discountPercentForQuantity($service, $quantity, $listSubtotal);
+        $pay = $this->discountedTotal($listSubtotal, $discountPercent);
 
         return [
             'unitPricePence' => $unitPrice,
-            'subtotalPence' => $subtotal - $discountAmount,
-            'tierDiscountPercent' => $tierDiscount,
+            'listSubtotalPence' => $listSubtotal,
+            'subtotalPence' => $pay,
+            'discountPence' => $listSubtotal - $pay,
+            'tierDiscountPercent' => $discountPercent,
         ];
+    }
+
+    /**
+     * Laser Clinics-style quantity discount off the single-treatment price.
+     * A matching package discount (set in Admin) wins over the default tiers.
+     */
+    public function discountPercentForQuantity(Service $service, int $quantity, int $listSubtotal = 0): int
+    {
+        $quantity = max(1, $quantity);
+        $packages = $service->relationLoaded('packages')
+            ? $service->packages
+            : $service->packages()->get();
+
+        $pkg = $packages->first(fn ($row) => (int) $row->sessions === $quantity);
+
+        if ($pkg && (int) $pkg->discount_percent > 0) {
+            return min(100, (int) $pkg->discount_percent);
+        }
+
+        if ($pkg && $listSubtotal > 0 && (int) $pkg->price_pence > 0 && (int) $pkg->price_pence < $listSubtotal) {
+            return (int) round((1 - ((int) $pkg->price_pence / $listSubtotal)) * 100);
+        }
+
+        return $this->tierDiscountPercent($quantity);
+    }
+
+    public function discountedTotal(int $listPence, int $percent): int
+    {
+        $percent = min(100, max(0, $percent));
+        if ($percent <= 0) {
+            return max(0, $listPence);
+        }
+        if ($percent >= 100) {
+            return 0;
+        }
+
+        return intdiv($listPence * (100 - $percent) + 50, 100);
     }
 
     public function tierDiscountPercent(int $quantity): int

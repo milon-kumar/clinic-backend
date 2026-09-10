@@ -9,6 +9,7 @@ use App\Models\PrepaidPackage;
 use App\Models\Service;
 use App\Models\SlotHold;
 use App\Services\AvailabilityService;
+use App\Services\ClientNotifyService;
 use App\Services\PackageService;
 use App\Services\SlotHoldService;
 use Carbon\Carbon;
@@ -22,6 +23,7 @@ class BookController extends Controller
         private AvailabilityService $availabilityService,
         private SlotHoldService $slotHoldService,
         private PackageService $packageService,
+        private ClientNotifyService $notify,
     ) {}
 
     public function priorTreatment(Request $request): JsonResponse
@@ -193,6 +195,8 @@ class BookController extends Controller
                 'holdId' => [$e->getMessage()],
             ]);
         }
+
+        $this->notify->bookingConfirmed($appointment->load(['clinic', 'service', 'customer']));
 
         return response()->json([
             'data' => $appointment->toApi(),

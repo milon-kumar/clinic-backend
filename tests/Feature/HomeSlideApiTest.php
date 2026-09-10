@@ -12,7 +12,11 @@ class HomeSlideApiTest extends PlatformTestCase
         $this->getJson('/api/v1/slides')
             ->assertOk()
             ->assertJsonCount(3, 'data')
-            ->assertJsonPath('data.0.image', '/Assets/05.webp');
+            ->assertJsonPath('data.0.image', '/Assets/05.webp')
+            ->assertJsonPath('data.0.title', '50% OFF')
+            ->assertJsonPath('data.0.offerNote', 'when you buy 3 or more')
+            ->assertJsonPath('data.0.bookUrl', '/all-treatment?mode=book')
+            ->assertJsonPath('data.0.buyUrl', '/all-treatment?mode=buy');
 
         HomeSlide::query()->first()?->update(['is_active' => false]);
 
@@ -29,10 +33,16 @@ class HomeSlideApiTest extends PlatformTestCase
             'image' => '/storage/slides/hero.jpg',
             'title' => 'Summer glow',
             'subtitle' => 'Book a consultation',
+            'offerNote' => 'when you buy 3 or more',
+            'bookUrl' => '/all-treatment?mode=book',
+            'buyUrl' => '/all-treatment?mode=buy',
             'linkUrl' => '/all-treatment',
             'intervalMs' => 4000,
         ])->assertCreated()
-            ->assertJsonPath('data.title', 'Summer glow');
+            ->assertJsonPath('data.title', 'Summer glow')
+            ->assertJsonPath('data.offerNote', 'when you buy 3 or more')
+            ->assertJsonPath('data.bookUrl', '/all-treatment?mode=book')
+            ->assertJsonPath('data.buyUrl', '/all-treatment?mode=buy');
 
         $id = $created->json('data.id');
 

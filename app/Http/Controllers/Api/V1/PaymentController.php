@@ -11,6 +11,7 @@ use App\Models\PaymentSession;
 use App\Models\Service;
 use App\Models\SlotHold;
 use App\Services\CartPricingEngine;
+use App\Services\ClientNotifyService;
 use App\Services\InventoryService;
 use App\Services\InvoiceService;
 use App\Services\PackageService;
@@ -30,6 +31,7 @@ class PaymentController extends Controller
         private SlotHoldService $slotHoldService,
         private InventoryService $inventoryService,
         private InvoiceService $invoiceService,
+        private ClientNotifyService $notify,
     ) {}
 
     public function checkout(Request $request): JsonResponse
@@ -121,6 +123,7 @@ class PaymentController extends Controller
 
         if ($session->status === 'pending') {
             $session = $this->fulfill($session, $request);
+            $this->notifyPaymentResult($session);
         }
 
         return response()->json([
@@ -217,5 +220,24 @@ class PaymentController extends Controller
 
             return $session->fresh();
         });
+    }
+
+    private function notifyPaymentResult(PaymentSession $session): void
+    {
+        $payload = $session->payload ?? [];
+
+        if (! empty($payload['orderId'])) {
+            $order = Order::query()->with(['customer', 'clinic', 'lines.service', 'packages.service', 'packages.clinic'])->find($payload['orderId']);
+            if ($order) {
+                $this->notify->purchaseConfirmed($order);
+            }
+        }
+
+        if (! empty($payload['appointmentId'])) {
+            $appointment = Appointment::query()->with(['clinic', 'service', 'customer'])->find($payload['appointmentId']);
+            if ($appointment) {
+                $this->notify->bookingConfirmed($appointment);
+            }
+        }
     }
 }

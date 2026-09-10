@@ -65,4 +65,31 @@ class ServicePublicApiTest extends PlatformTestCase
             ->assertJsonPath('data.appointmentAmount', 45)
             ->assertJsonPath('data.appointmentAmountPence', 4500);
     }
+
+    public function test_service_show_includes_same_category_recommendations(): void
+    {
+        $laser = $this->createService([
+            'name' => 'Full Body Laser',
+            'category' => 'lhr',
+            'treatment_type' => 'laser',
+        ]);
+        $faceLaser = $this->createService([
+            'name' => 'Face Laser',
+            'category' => 'lhr',
+            'treatment_type' => 'laser',
+        ]);
+        $this->createService([
+            'name' => 'Hydrafacial',
+            'category' => 'skin',
+            'treatment_type' => 'facial',
+        ]);
+
+        $recommended = $this->getJson('/api/v1/services/'.$laser->id)
+            ->assertOk()
+            ->json('data.recommended');
+
+        $this->assertSame('Face Laser', $recommended[0]['name']);
+        $this->assertTrue(collect($recommended)->contains(fn ($row) => (int) $row['id'] === $faceLaser->id));
+        $this->assertFalse(collect($recommended)->contains(fn ($row) => (int) $row['id'] === $laser->id));
+    }
 }

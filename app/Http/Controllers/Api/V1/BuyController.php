@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderLine;
 use App\Models\PaymentSession;
 use App\Services\CartPricingEngine;
+use App\Services\ClientNotifyService;
 use App\Services\ClinicCatalogService;
 use App\Services\InventoryService;
 use App\Services\InvoiceService;
@@ -26,6 +27,7 @@ class BuyController extends Controller
         private ClinicCatalogService $catalogService,
         private InventoryService $inventoryService,
         private InvoiceService $invoiceService,
+        private ClientNotifyService $notify,
     ) {}
 
     public function start(Request $request): JsonResponse
@@ -109,6 +111,7 @@ class BuyController extends Controller
         $packages = $this->packageService->createFromOrder($order);
         $cart->lines()->delete();
         $cart->update(['promo_code' => null]);
+        $this->notify->purchaseConfirmed($order->load(['customer', 'clinic', 'lines.service', 'packages.service', 'packages.clinic']));
 
         return response()->json([
             'data' => [

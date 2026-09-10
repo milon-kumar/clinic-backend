@@ -79,6 +79,7 @@ class CategoryLanding extends Model
             'cosmatic-product',
             'dashboard',
             'doctors',
+            'forgot-password',
             'go-to-clinic',
             'home',
             'login',

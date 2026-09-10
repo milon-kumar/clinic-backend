@@ -136,6 +136,11 @@ class User extends Authenticatable
         return $this->hasMany(Appointment::class, 'customer_id');
     }
 
+    public function appNotifications(): HasMany
+    {
+        return $this->hasMany(AppNotification::class);
+    }
+
     public function toApi(): array
     {
         return [

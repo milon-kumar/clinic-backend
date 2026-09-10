@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('app_notifications', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('audience', 20)->default('customer');
+            $table->string('type', 60);
+            $table->string('title');
+            $table->text('body')->nullable();
+            $table->string('href')->nullable();
+            $table->foreignId('clinic_id')->nullable()->constrained()->nullOnDelete();
+            $table->json('data')->nullable();
+            $table->timestamp('read_at')->nullable();
+            $table->timestamps();
+
+            $table->index(['user_id', 'audience', 'read_at']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('app_notifications');
+    }
+};

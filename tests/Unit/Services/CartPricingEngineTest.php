@@ -93,4 +93,37 @@ class CartPricingEngineTest extends PlatformTestCase
         $this->assertSame(6000, $three['summary']['tierDiscountPence']);
         $this->assertSame(24000, $three['summary']['totalPence']);
     }
+
+    public function test_package_discount_overrides_quantity_tier_in_cart(): void
+    {
+        $clinic = $this->createClinic();
+        $service = $this->createService(['base_price_pence' => 18499]);
+        $this->attachServiceToClinic($clinic, $service);
+        $service->packages()->delete();
+        $service->packages()->create([
+            'title' => '3 Treatments',
+            'sessions' => 3,
+            'discount_percent' => 50,
+            'price_pence' => 27749,
+        ]);
+
+        $cart = Cart::create([
+            'clinic_id' => $clinic->id,
+            'cart_type' => 'buy',
+        ]);
+
+        CartLine::create([
+            'cart_id' => $cart->id,
+            'service_id' => $service->id,
+            'quantity' => 3,
+            'unit_price_pence' => 18499,
+        ]);
+
+        $result = app(CartPricingEngine::class)->priceCart($cart);
+
+        $this->assertSame(50, $result['lines'][0]['discountPercent']);
+        $this->assertSame(18499 * 3, $result['lines'][0]['listTotalPence']);
+        $this->assertSame(27749, $result['lines'][0]['lineTotalPence']);
+        $this->assertSame(27749, $result['summary']['totalPence']);
+    }
 }

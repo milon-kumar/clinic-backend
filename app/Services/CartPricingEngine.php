@@ -36,11 +36,17 @@ class CartPricingEngine
 
             $price = $cart->clinic_id
                 ? $this->catalogService->resolvePrice($cart->clinic_id, $line->service_id, $line->quantity)
-                : ['unitPricePence' => $line->unit_price_pence, 'subtotalPence' => $line->unit_price_pence * $line->quantity, 'tierDiscountPercent' => 0];
+                : [
+                    'unitPricePence' => $line->unit_price_pence,
+                    'listSubtotalPence' => $line->unit_price_pence * $line->quantity,
+                    'subtotalPence' => $line->unit_price_pence * $line->quantity,
+                    'discountPence' => 0,
+                    'tierDiscountPercent' => 0,
+                ];
 
-            $lineSubtotal = $price['unitPricePence'] * $line->quantity;
-            $lineTierDiscount = (int) round($lineSubtotal * ($price['tierDiscountPercent'] / 100));
-            $lineTotal = $lineSubtotal - $lineTierDiscount;
+            $lineSubtotal = $price['listSubtotalPence'] ?? ($price['unitPricePence'] * $line->quantity);
+            $lineTierDiscount = $price['discountPence'] ?? (int) round($lineSubtotal * (($price['tierDiscountPercent'] ?? 0) / 100));
+            $lineTotal = $price['subtotalPence'] ?? ($lineSubtotal - $lineTierDiscount);
 
             $prereq = $customer && $cart->clinic_id
                 ? $this->prerequisiteService->check($customer->id, $line->service_id, $cart->clinic_id)
@@ -62,6 +68,9 @@ class CartPricingEngine
                 'name' => $line->service->name,
                 'quantity' => $line->quantity,
                 'unitPricePence' => $price['unitPricePence'],
+                'listTotalPence' => $lineSubtotal,
+                'discountPercent' => $price['tierDiscountPercent'],
+                'discountPence' => $lineTierDiscount,
                 'lineTotalPence' => $lineTotal,
                 'available' => $availability['ok'] && $prereq['satisfied'],
                 'unavailableReason' => $availability['reason'] ?? (!$prereq['satisfied'] ? 'PREREQUISITES_NOT_MET' : null),

@@ -104,6 +104,50 @@ class AuthController extends Controller
         ]);
     }
 
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $user = User::where('email', $data['email'])->first();
+
+        if ($user) {
+            $this->otpService->generate($user, OtpService::TYPE_PASSWORD_RESET);
+        }
+
+        return response()->json([
+            'message' => 'If that email is registered, we have sent a reset code.',
+        ]);
+    }
+
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+            'otp' => ['required', 'string', 'size:6'],
+            'password' => ['required', 'string', 'min:6'],
+            'passwordConfirmation' => ['required', 'same:password'],
+        ]);
+
+        $user = User::where('email', $data['email'])->first();
+
+        if (! $user || ! $this->otpService->verify($user, $data['otp'], OtpService::TYPE_PASSWORD_RESET)) {
+            throw ValidationException::withMessages([
+                'otp' => ['Invalid or expired reset code.'],
+            ]);
+        }
+
+        $user->update([
+            'password' => $data['password'],
+        ]);
+        $user->tokens()->delete();
+
+        return response()->json([
+            'message' => 'Password updated. You can sign in with your new password.',
+        ]);
+    }
+
     public function createStaff(Request $request): JsonResponse
     {
         $data = $request->validate([

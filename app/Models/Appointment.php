@@ -12,6 +12,7 @@ class Appointment extends Model
         'clinic_id',
         'service_id',
         'package_id',
+        'next_appointment_id',
         'full_name',
         'phone',
         'email',
@@ -23,12 +24,14 @@ class Appointment extends Model
         'payment_method',
         'amount_pence',
         'qr_token',
+        'completed_at',
     ];
 
     protected function casts(): array
     {
         return [
             'appointment_date' => 'date',
+            'completed_at' => 'datetime',
         ];
     }
 
@@ -52,6 +55,11 @@ class Appointment extends Model
         return $this->belongsTo(PrepaidPackage::class, 'package_id');
     }
 
+    public function nextAppointment(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'next_appointment_id');
+    }
+
     public function toApi(): array
     {
         return [
@@ -71,8 +79,15 @@ class Appointment extends Model
                 'title' => $this->service?->name,
             ],
             'packageId' => $this->package_id,
+            'sessionsRemaining' => $this->prepaidPackage?->sessionsRemaining(),
             'appointmentDate' => $this->appointment_date?->toDateString(),
             'appointmentTime' => $this->appointment_time,
+            'completedAt' => $this->completed_at?->toIso8601String(),
+            'nextAppointmentId' => $this->next_appointment_id,
+            'nextAppointmentDate' => $this->nextAppointment?->appointment_date?->toDateString()
+                ?? $this->prepaidPackage?->next_appointment_date,
+            'nextAppointmentTime' => $this->nextAppointment?->appointment_time
+                ?? $this->prepaidPackage?->next_appointment_time,
             'status' => $this->status,
             'paymentStatus' => $this->payment_status,
             'paymentMethod' => $this->payment_method,

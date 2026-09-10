@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class Service extends Model
 {
@@ -68,6 +69,54 @@ class Service extends Model
     public function isFreeAppointment(): bool
     {
         return $this->appointmentAmountPence() === 0;
+    }
+
+    /**
+     * Nearby treatments for the "You might also like" row.
+     *
+     * @return Collection<int, Service>
+     */
+    public function recommendedServices(int $limit = 4): Collection
+    {
+        $limit = max(1, min(8, $limit));
+        $category = mb_strtolower((string) $this->category);
+        $type = mb_strtolower((string) $this->treatment_type);
+
+        $same = collect();
+        if ($category !== '' || $type !== '') {
+            $same = static::query()
+                ->where('is_active', true)
+                ->where('id', '!=', $this->id)
+                ->where(function ($query) use ($category, $type) {
+                    if ($category !== '') {
+                        $query->orWhereRaw('LOWER(category) = ?', [$category]);
+                    }
+                    if ($type !== '') {
+                        $query->orWhereRaw('LOWER(treatment_type) = ?', [$type]);
+                    }
+                })
+                ->with(['packages'])
+                ->orderByDesc('is_featured')
+                ->orderBy('name')
+                ->limit($limit)
+                ->get();
+        }
+
+        if ($same->count() >= $limit) {
+            return $same->values();
+        }
+
+        $exclude = $same->pluck('id')->push($this->id);
+        $fill = static::query()
+            ->where('is_active', true)
+            ->whereNotIn('id', $exclude)
+            ->with(['packages'])
+            ->orderByDesc('is_featured')
+            ->orderBy('name')
+            ->limit($limit - $same->count())
+            ->get();
+
+        return $same->concat($fill)->values();
     }
 
     public function toApi(): array

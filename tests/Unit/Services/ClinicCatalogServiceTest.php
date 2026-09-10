@@ -72,6 +72,46 @@ class ClinicCatalogServiceTest extends PlatformTestCase
         $this->assertSame(5000, $three['unitPricePence']);
         $this->assertSame(20, $three['tierDiscountPercent']);
         $this->assertSame(12000, $three['subtotalPence']);
+        $this->assertSame(15000, $three['listSubtotalPence']);
+    }
+
+    public function test_package_discount_overrides_quantity_tier(): void
+    {
+        $clinic = $this->createClinic();
+        $service = $this->createService(['base_price_pence' => 18499]);
+        $this->attachServiceToClinic($clinic, $service);
+        $service->packages()->delete();
+        $service->packages()->create([
+            'title' => '3 Treatments',
+            'sessions' => 3,
+            'discount_percent' => 50,
+            'price_pence' => 27749,
+        ]);
+
+        $quoted = $this->service->resolvePrice($clinic->id, $service->id, 3);
+
+        $this->assertSame(50, $quoted['tierDiscountPercent']);
+        $this->assertSame(18499 * 3, $quoted['listSubtotalPence']);
+        $this->assertSame(27749, $quoted['subtotalPence']);
+    }
+
+    public function test_package_price_implies_discount_when_percent_unset(): void
+    {
+        $clinic = $this->createClinic();
+        $service = $this->createService(['base_price_pence' => 18499]);
+        $this->attachServiceToClinic($clinic, $service);
+        $service->packages()->delete();
+        $service->packages()->create([
+            'title' => '3 Treatments',
+            'sessions' => 3,
+            'discount_percent' => 0,
+            'price_pence' => 27749,
+        ]);
+
+        $quoted = $this->service->resolvePrice($clinic->id, $service->id, 3);
+
+        $this->assertSame(50, $quoted['tierDiscountPercent']);
+        $this->assertSame(27749, $quoted['subtotalPence']);
     }
 
     public function test_get_services_filters_buy_mode(): void

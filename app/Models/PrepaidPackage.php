@@ -16,12 +16,18 @@ class PrepaidPackage extends Model
         'sessions_used',
         'status',
         'expires_at',
+        'next_appointment_date',
+        'next_appointment_time',
+        'next_appointment_id',
+        'next_notified_at',
     ];
 
     protected function casts(): array
     {
         return [
             'expires_at' => 'datetime',
+            'next_appointment_date' => 'date',
+            'next_notified_at' => 'datetime',
         ];
     }
 
@@ -80,6 +86,9 @@ class PrepaidPackage extends Model
             'sessionsRemaining' => $this->sessionsRemaining(),
             'status' => $this->status,
             'expiresAt' => $this->expires_at?->toIso8601String(),
+            'nextAppointmentId' => $this->next_appointment_id,
+            'nextAppointmentDate' => $this->next_appointment_date?->toDateString(),
+            'nextAppointmentTime' => $this->next_appointment_time,
         ];
     }
 }

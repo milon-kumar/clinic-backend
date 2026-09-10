@@ -9,11 +9,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        'https://elixirclinic.co.uk',
-        'https://www.elixirclinic.co.uk',
-    ],
-
+    'allowed_origins' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('FRONTEND_URL', 'http://localhost:3000')),
+    ))),
 
     'allowed_origins_patterns' => [],
 

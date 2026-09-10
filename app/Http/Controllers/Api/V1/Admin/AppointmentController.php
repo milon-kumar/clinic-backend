@@ -6,19 +6,26 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\Service;
 use App\Services\AvailabilityService;
+use App\Services\NotificationService;
+use App\Services\SessionWorkflowService;
 use App\Support\BranchScope;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class AppointmentController extends Controller
 {
-    public function __construct(private AvailabilityService $availabilityService) {}
+    public function __construct(
+        private AvailabilityService $availabilityService,
+        private SessionWorkflowService $sessionWorkflow,
+        private NotificationService $notifications,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $query = Appointment::query()->with(['clinic', 'service', 'customer']);
+        $query = Appointment::query()->with(['clinic', 'service', 'customer', 'nextAppointment', 'prepaidPackage']);
         BranchScope::apply($query, $request->user());
 
         if ($status = $request->query('status')) {
@@ -44,7 +51,7 @@ class AppointmentController extends Controller
 
     public function show(Request $request, int $id): JsonResponse
     {
-        $appointment = Appointment::query()->with(['clinic', 'service', 'customer'])->findOrFail($id);
+        $appointment = Appointment::query()->with(['clinic', 'service', 'customer', 'nextAppointment', 'prepaidPackage'])->findOrFail($id);
         BranchScope::assert($request->user(), (int) $appointment->clinic_id);
 
         return response()->json(['data' => $appointment->toApi()]);
@@ -165,8 +172,42 @@ class AppointmentController extends Controller
         $appointment = Appointment::findOrFail($id);
         BranchScope::assert($request->user(), (int) $appointment->clinic_id);
         $appointment->update(['status' => 'cancelled']);
+        $fresh = $appointment->fresh(['clinic', 'service']);
+        try {
+            $this->notifications->appointmentCancelled($fresh);
+        } catch (\Throwable $e) {
+            Log::warning('In-app notification failed', ['error' => $e->getMessage()]);
+        }
 
-        return response()->json(['data' => $appointment->fresh(['clinic', 'service'])->toApi()]);
+        return response()->json(['data' => $fresh->toApi()]);
+    }
+
+    public function complete(Request $request, int $id): JsonResponse
+    {
+        $appointment = Appointment::query()->with(['clinic', 'service', 'prepaidPackage'])->findOrFail($id);
+        BranchScope::assert($request->user(), (int) $appointment->clinic_id);
+
+        $data = $request->validate([
+            'action' => ['nullable', 'in:complete,defer'],
+            'nextAppointmentDate' => ['nullable', 'date'],
+            'nextAppointmentTime' => ['nullable', 'string', 'max:40'],
+        ]);
+
+        $nextDate = $data['nextAppointmentDate'] ?? null;
+        $nextTime = $data['nextAppointmentTime'] ?? null;
+
+        if (($data['action'] ?? 'complete') === 'defer') {
+            $updated = $this->sessionWorkflow->defer($appointment, $nextDate, $nextTime);
+
+            return response()->json(['data' => $updated->toApi()]);
+        }
+
+        $result = $this->sessionWorkflow->complete($appointment, $nextDate, $nextTime);
+
+        return response()->json([
+            'data' => $result['appointment']->toApi(),
+            'next' => $result['next']?->toApi(),
+        ]);
     }
 
     public function stats(Request $request): JsonResponse

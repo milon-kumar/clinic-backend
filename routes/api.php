@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\V1\ClinicController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\CustomerController;
 use App\Http\Controllers\Api\V1\DoctorController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\ServiceController;
 use App\Http\Controllers\Api\V1\HomeBlockController;
@@ -38,6 +39,8 @@ Route::prefix('api/v1')->group(function () {
         Route::post('login', [AuthController::class, 'login']);
         Route::post('verify-email', [AuthController::class, 'verifyEmail']);
         Route::post('resend-otp', [AuthController::class, 'resendOtp']);
+        Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:6,1');
+        Route::post('reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1');
 
         Route::middleware(['auth:sanctum', 'staff:superadmin,admin,manager'])->group(function () {
             Route::post('create-staff', [AuthController::class, 'createStaff']);
@@ -64,6 +67,11 @@ Route::prefix('api/v1')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::put('session/clinic', [ClinicController::class, 'setSessionClinic']);
+
+        Route::get('notifications', [NotificationController::class, 'index']);
+        Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::patch('notifications/{id}/read', [NotificationController::class, 'markRead'])->whereNumber('id');
+        Route::post('notifications/read-all', [NotificationController::class, 'markAllRead']);
 
         Route::get('cart', [CartController::class, 'show']);
         Route::post('cart/lines', [CartController::class, 'addLine']);
@@ -101,6 +109,7 @@ Route::prefix('api/v1')->group(function () {
             Route::get('appointments/availability', [AdminAppointmentController::class, 'availability']);
             Route::patch('appointments/{id}/confirm', [AdminAppointmentController::class, 'confirm']);
             Route::patch('appointments/{id}/cancel', [AdminAppointmentController::class, 'cancel']);
+            Route::patch('appointments/{id}/complete', [AdminAppointmentController::class, 'complete']);
             Route::apiResource('appointments', AdminAppointmentController::class);
 
             Route::post('services/upload', [AdminServiceController::class, 'upload']);
@@ -109,6 +118,7 @@ Route::prefix('api/v1')->group(function () {
             Route::get('settings', [AdminSiteSettingController::class, 'show']);
             Route::patch('settings', [AdminSiteSettingController::class, 'update']);
             Route::post('settings/upload', [AdminSiteSettingController::class, 'upload']);
+            Route::post('settings/test-email', [AdminSiteSettingController::class, 'testEmail']);
 
             Route::get('slides', [AdminHomeSlideController::class, 'index']);
             Route::post('slides', [AdminHomeSlideController::class, 'store']);

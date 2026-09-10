@@ -50,6 +50,11 @@ class ServiceController extends Controller
             ->with(['packages', 'benefits', 'faqs'])
             ->findOrFail($id);
 
-        return response()->json(['data' => $service->toApi()]);
+        $data = $service->toApi();
+        $data['recommended'] = $service->recommendedServices()
+            ->map(fn (Service $row) => $row->toApi())
+            ->all();
+
+        return response()->json(['data' => $data]);
     }
 }
