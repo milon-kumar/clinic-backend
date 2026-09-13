@@ -4,9 +4,6 @@ use App\Http\Controllers\Api\V1\Admin\AppointmentController as AdminAppointmentC
 use App\Http\Controllers\Api\V1\Admin\TreatmentJourneyController as AdminTreatmentJourneyController;
 use App\Http\Controllers\Api\V1\Admin\ClinicController as AdminClinicController;
 use App\Http\Controllers\Api\V1\Admin\DoctorController as AdminDoctorController;
-use App\Http\Controllers\Api\V1\Admin\InventoryController as AdminInventoryController;
-use App\Http\Controllers\Api\V1\Admin\InvoiceController as AdminInvoiceController;
-use App\Http\Controllers\Api\V1\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\V1\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Api\V1\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Api\V1\Admin\ServiceController as AdminServiceController;
@@ -112,6 +109,8 @@ Route::prefix('api/v1')->group(function () {
             Route::patch('appointments/{id}/cancel', [AdminAppointmentController::class, 'cancel']);
             Route::patch('appointments/{id}/complete', [AdminAppointmentController::class, 'complete']);
             Route::get('treatment-journeys', [AdminTreatmentJourneyController::class, 'index']);
+            Route::post('treatment-journeys', [AdminTreatmentJourneyController::class, 'store']);
+            Route::get('treatment-journeys/{id}', [AdminTreatmentJourneyController::class, 'show']);
             Route::apiResource('appointments', AdminAppointmentController::class);
 
             Route::post('services/upload', [AdminServiceController::class, 'upload']);
@@ -142,20 +141,6 @@ Route::prefix('api/v1')->group(function () {
             Route::apiResource('users', AdminUserController::class);
 
             Route::get('reports', AdminReportController::class);
-
-            Route::get('orders', [AdminOrderController::class, 'index']);
-            Route::get('orders/{id}', [AdminOrderController::class, 'show']);
-            Route::get('carts', [AdminOrderController::class, 'carts']);
-
-            Route::get('inventory', [AdminInventoryController::class, 'index']);
-            Route::post('inventory/restock', [AdminInventoryController::class, 'restock']);
-            Route::get('inventory/movements', [AdminInventoryController::class, 'movements']);
-            Route::get('suppliers', [AdminInventoryController::class, 'suppliers']);
-            Route::post('suppliers', [AdminInventoryController::class, 'storeSupplier']);
-
-            Route::get('invoices', [AdminInvoiceController::class, 'index']);
-            Route::post('invoices', [AdminInvoiceController::class, 'store']);
-            Route::get('invoices/{id}', [AdminInvoiceController::class, 'show']);
 
             Route::get('clinics/{id}/staff', [AdminStaffController::class, 'index']);
             Route::post('clinics/{id}/staff', [AdminStaffController::class, 'store']);

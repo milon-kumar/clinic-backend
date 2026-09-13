@@ -27,6 +27,10 @@ class ServiceController extends Controller
             $query->where('is_featured', true);
         }
 
+        if ($request->boolean('menu')) {
+            $query->where('show_in_menu', true);
+        }
+
         if ($type = $request->query('treatmentType', $request->query('treatment_type'))) {
             $query->whereRaw('LOWER(treatment_type) = ?', [mb_strtolower($type)]);
         }

@@ -114,6 +114,8 @@ class ServiceController extends Controller
             'faqs' => ['nullable', 'array'],
             'isActive' => ['nullable', 'boolean'],
             'isFeatured' => ['nullable', 'boolean'],
+            'showInMenu' => ['nullable', 'boolean'],
+            'allowLocal' => ['nullable', 'boolean'],
             'supportsBuy' => ['nullable', 'boolean'],
             'supportsBook' => ['nullable', 'boolean'],
             'offerAtAllClinics' => ['nullable', 'boolean'],
@@ -148,6 +150,8 @@ class ServiceController extends Controller
             'images' => array_values(array_filter($data['images'] ?? [])),
             'is_active' => $data['isActive'] ?? true,
             'is_featured' => $data['isFeatured'] ?? false,
+            'show_in_menu' => $data['showInMenu'] ?? true,
+            'allow_local' => $data['allowLocal'] ?? false,
             'supports_buy' => $data['supportsBuy'] ?? true,
             'supports_book' => $data['supportsBook'] ?? true,
         ];

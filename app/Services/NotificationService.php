@@ -56,7 +56,7 @@ class NotificationService
             'type' => 'new_order',
             'title' => 'New package purchase',
             'body' => "{$who} bought {$sessions} session".($sessions === 1 ? '' : 's').'.',
-            'href' => '/Admin/orders',
+            'href' => '/Admin/treatment-orders',
             'data' => ['orderId' => $order->id],
         ], $order->customer_id);
     }

@@ -23,6 +23,8 @@ class Service extends Model
         'supports_book',
         'is_active',
         'is_featured',
+        'show_in_menu',
+        'allow_local',
     ];
 
     protected function casts(): array
@@ -33,6 +35,8 @@ class Service extends Model
             'supports_book' => 'boolean',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'show_in_menu' => 'boolean',
+            'allow_local' => 'boolean',
         ];
     }
 
@@ -140,6 +144,8 @@ class Service extends Model
             'supportsBook' => $this->supports_book,
             'isActive' => $this->is_active,
             'isFeatured' => $this->is_featured,
+            'showInMenu' => $this->show_in_menu,
+            'allowLocal' => $this->allow_local,
             'packages' => $this->relationLoaded('packages')
                 ? $this->packages->map(fn (ServicePackage $p) => $p->toApi())->all()
                 : [],

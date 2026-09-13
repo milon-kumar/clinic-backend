@@ -102,7 +102,7 @@ class TreatmentJourneyService
      */
     public function listForAdmin(User $staff, ?string $search = null, ?int $clinicId = null): array
     {
-        $query = PrepaidPackage::query()->with(['clinic', 'service', 'customer']);
+        $query = PrepaidPackage::query()->with(['clinic', 'service', 'customer', 'order.lines']);
         BranchScope::apply($query, $staff);
 
         if ($clinicId) {
@@ -128,23 +128,40 @@ class TreatmentJourneyService
 
         $packages = $query->orderByDesc('id')
             ->get()
-            ->map(function (PrepaidPackage $package) {
-                $journey = $this->packageJourney($package);
-                $journey['customerId'] = $package->customer_id;
-                $journey['patientName'] = trim(($package->customer?->first_name ?? '').' '.($package->customer?->last_name ?? ''))
-                    ?: ($package->customer?->name ?: 'Unknown patient');
-                $journey['patientEmail'] = $package->customer?->email;
-                $journey['patientPhone'] = $package->customer?->phone;
-
-                return $journey;
-            })
+            ->map(fn (PrepaidPackage $package) => $this->packageJourney($package))
             ->values()
             ->all();
 
-        return array_values(array_merge(
+        return collect(array_merge(
             $packages,
             $this->standaloneJourneys($staff, $search, $clinicId),
-        ));
+        ))
+            ->sortByDesc(fn (array $row) => $row['bookingDate'] ?? '')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function findForAdmin(User $staff, string $id): array
+    {
+        if (ctype_digit($id)) {
+            $query = PrepaidPackage::query()->with(['clinic', 'service', 'customer', 'order.lines']);
+            BranchScope::apply($query, $staff);
+            $package = $query->find((int) $id);
+            if ($package) {
+                return $this->packageJourney($package);
+            }
+        }
+
+        foreach ($this->standaloneJourneys($staff) as $row) {
+            if ((string) $row['id'] === $id) {
+                return $row;
+            }
+        }
+
+        abort(404, 'Treatment order not found');
     }
 
     /**
@@ -174,7 +191,7 @@ class TreatmentJourneyService
      */
     public function packageJourney(PrepaidPackage $package): array
     {
-        $package->loadMissing(['clinic', 'service']);
+        $package->loadMissing(['clinic', 'service', 'customer', 'order.lines']);
 
         $appointments = Appointment::query()
             ->where('package_id', $package->id)
@@ -189,10 +206,17 @@ class TreatmentJourneyService
         })->all();
 
         $completed = $appointments->where('status', 'completed')->last();
+        $pricePence = $this->packagePricePence($package, $appointments);
 
-        return array_merge($package->toApi(), [
+        return array_merge($package->toApi(), $this->patientFields($package), [
             'lastSessionNotes' => $completed?->session_notes,
             'sessions' => $sessions,
+            'orderId' => $package->order_id,
+            'pricePence' => $pricePence,
+            'price' => $pricePence / 100,
+            'bookingDate' => $appointments->first()?->appointment_date?->toDateString()
+                ?? $package->order?->paid_at?->toDateString()
+                ?? $package->created_at?->toDateString(),
         ]);
     }
 
@@ -318,6 +342,7 @@ class TreatmentJourneyService
             $patientName = trim(($first->customer?->first_name ?? '').' '.($first->customer?->last_name ?? ''))
                 ?: ($first->full_name ?: $first->customer?->name ?: 'Unknown patient');
 
+            $pricePence = (int) $sorted->sum('amount_pence');
             $rows[] = [
                 'id' => 'standalone-'.$first->clinic_id.'-'.$first->service_id.'-'.($first->customer_id ?: md5($patientName)),
                 'customerId' => $first->customer_id,
@@ -333,6 +358,9 @@ class TreatmentJourneyService
                 'sessionsRemaining' => $upcoming,
                 'status' => $upcoming > 0 ? 'active' : 'completed',
                 'lastSessionNotes' => $sorted->where('status', 'completed')->last()?->session_notes,
+                'pricePence' => $pricePence,
+                'price' => $pricePence / 100,
+                'bookingDate' => $first->appointment_date?->toDateString(),
                 'sessions' => $sorted->map(function (Appointment $appointment, int $index) use ($sorted) {
                     $previous = $index > 0 ? $sorted[$index - 1] : null;
 
@@ -342,6 +370,39 @@ class TreatmentJourneyService
         }
 
         return $rows;
+    }
+
+    /**
+     * @return array{customerId: int|null, patientName: string, patientEmail: string|null, patientPhone: string|null}
+     */
+    private function patientFields(PrepaidPackage $package): array
+    {
+        return [
+            'customerId' => $package->customer_id,
+            'patientName' => trim(($package->customer?->first_name ?? '').' '.($package->customer?->last_name ?? ''))
+                ?: ($package->customer?->name ?: 'Unknown patient'),
+            'patientEmail' => $package->customer?->email,
+            'patientPhone' => $package->customer?->phone,
+        ];
+    }
+
+    /**
+     * @param  Collection<int, Appointment>  $appointments
+     */
+    private function packagePricePence(PrepaidPackage $package, Collection $appointments): int
+    {
+        $order = $package->order;
+        if ($order) {
+            $order->loadMissing('lines');
+            $line = $order->lines->firstWhere('service_id', $package->service_id);
+            if ($line) {
+                return (int) $line->quantity * (int) $line->unit_price_pence;
+            }
+
+            return (int) $order->total_pence;
+        }
+
+        return (int) $appointments->sum('amount_pence');
     }
 
     /**

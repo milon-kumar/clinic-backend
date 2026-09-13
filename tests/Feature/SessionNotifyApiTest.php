@@ -164,7 +164,15 @@ class SessionNotifyApiTest extends PlatformTestCase
             ->assertOk()
             ->assertJsonPath('data.0.sessionsRemaining', 3)
             ->assertJsonPath('data.0.lastSessionNotes', 'Start on low setting.')
-            ->assertJsonPath('data.0.patientEmail', 'journey@example.com');
+            ->assertJsonPath('data.0.patientEmail', 'journey@example.com')
+            ->assertJsonPath('data.0.patientName', $patient->name)
+            ->assertJsonPath('data.0.bookingDate', now()->subWeek()->toDateString());
+
+        $this->getJson('/api/v1/admin/treatment-journeys/'.$package->id)
+            ->assertOk()
+            ->assertJsonPath('data.sessionsRemaining', 3)
+            ->assertJsonPath('data.serviceName', $service->name)
+            ->assertJsonPath('data.sessions.0.sessionNotes', 'Start on low setting.');
     }
 
     public function test_completed_cash_appointment_appears_in_treatment_journeys(): void
@@ -195,11 +203,19 @@ class SessionNotifyApiTest extends PlatformTestCase
             'sessionNotes' => 'First pass done.',
         ])->assertOk()->assertJsonPath('data.status', 'completed');
 
-        $this->getJson('/api/v1/admin/treatment-journeys?search=Zakaria')
+        $list = $this->getJson('/api/v1/admin/treatment-journeys?search=Zakaria')
             ->assertOk()
             ->assertJsonPath('data.0.serviceName', 'Laser Hair Removal')
             ->assertJsonPath('data.0.sessionsUsed', 1)
-            ->assertJsonPath('data.0.lastSessionNotes', 'First pass done.');
+            ->assertJsonPath('data.0.lastSessionNotes', 'First pass done.')
+            ->assertJsonPath('data.0.pricePence', 29900)
+            ->assertJsonPath('data.0.bookingDate', now()->toDateString())
+            ->json('data.0');
+
+        $this->getJson('/api/v1/admin/treatment-journeys/'.$list['id'])
+            ->assertOk()
+            ->assertJsonPath('data.patientName', 'Zakaria User')
+            ->assertJsonPath('data.sessionsRemaining', 0);
     }
 
     public function test_buy_confirm_sends_purchase_email(): void

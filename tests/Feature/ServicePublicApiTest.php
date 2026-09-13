@@ -42,6 +42,24 @@ class ServicePublicApiTest extends PlatformTestCase
             ->assertJsonPath('data.0.name', 'Featured Laser');
     }
 
+    public function test_public_services_menu_filter_only_returns_listed_treatments(): void
+    {
+        $this->createService([
+            'name' => 'Menu Laser',
+            'show_in_menu' => true,
+        ]);
+        $this->createService([
+            'name' => 'Hidden From Menu',
+            'show_in_menu' => false,
+        ]);
+
+        $this->getJson('/api/v1/services?menu=1')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Menu Laser')
+            ->assertJsonPath('data.0.showInMenu', true);
+    }
+
     public function test_superadmin_can_save_benefits_and_faqs(): void
     {
         $this->createClinic(['slug' => 'svc-faq', 'code' => 'SVC_FAQ']);
@@ -51,6 +69,7 @@ class ServicePublicApiTest extends PlatformTestCase
             'name' => 'FAQ Treatment',
             'appointmentAmount' => 45,
             'isFeatured' => true,
+            'showInMenu' => false,
             'benefits' => [
                 ['title' => 'Gentle', 'description' => 'Suitable for sensitive skin.'],
                 ['title' => '', 'description' => 'skip'],
@@ -60,6 +79,7 @@ class ServicePublicApiTest extends PlatformTestCase
             ],
         ])->assertCreated()
             ->assertJsonPath('data.isFeatured', true)
+            ->assertJsonPath('data.showInMenu', false)
             ->assertJsonCount(1, 'data.benefits')
             ->assertJsonPath('data.faqs.0.question', 'Does it hurt?')
             ->assertJsonPath('data.appointmentAmount', 45)

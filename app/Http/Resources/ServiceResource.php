@@ -33,6 +33,8 @@ class ServiceResource extends JsonResource
             'metadata' => $this->metadata_json ?? [],
             'isActive' => $this->is_active,
             'isFeatured' => $this->is_featured,
+            'showInMenu' => $this->show_in_menu,
+            'allowLocal' => $this->allow_local,
             'packages' => $this->whenLoaded('packages', fn () => $this->packages->map(fn ($pkg) => [
                 'id' => $pkg->id,
                 'title' => $pkg->title,
