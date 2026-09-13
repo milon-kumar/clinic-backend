@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use App\Models\PrepaidPackage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class SessionWorkflowService
@@ -18,12 +19,22 @@ class SessionWorkflowService
     /**
      * @return array{appointment: Appointment, next: ?Appointment}
      */
-    public function complete(Appointment $appointment, ?string $nextDate = null, ?string $nextTime = null): array
-    {
-        $appointment->update([
+    public function complete(
+        Appointment $appointment,
+        ?string $nextDate = null,
+        ?string $nextTime = null,
+        ?string $sessionNotes = null,
+    ): array {
+        $updates = [
             'status' => 'completed',
             'completed_at' => now(),
-        ]);
+        ];
+
+        if ($sessionNotes !== null && Schema::hasColumn('appointments', 'session_notes')) {
+            $updates['session_notes'] = $sessionNotes;
+        }
+
+        $appointment->update($updates);
 
         try {
             $this->notifications->sessionCompleted($appointment->fresh(['clinic', 'service']));
@@ -81,7 +92,11 @@ class SessionWorkflowService
 
         $from->update(['next_appointment_id' => $next->id]);
         $this->syncPackageNext($from, $date, $time, $next->id);
-        $this->notify->nextSession($next->load(['clinic', 'service', 'customer']));
+        try {
+            $this->notify->nextSession($next->load(['clinic', 'service', 'customer']));
+        } catch (\Throwable $e) {
+            Log::warning('Next session notification failed', ['error' => $e->getMessage()]);
+        }
 
         return $next;
     }

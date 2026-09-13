@@ -5,12 +5,16 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Services\PackageService;
+use App\Services\TreatmentJourneyService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    public function __construct(private PackageService $packageService) {}
+    public function __construct(
+        private PackageService $packageService,
+        private TreatmentJourneyService $journeys,
+    ) {}
 
     public function me(Request $request): JsonResponse
     {
@@ -48,11 +52,11 @@ class CustomerController extends Controller
     {
         $appointments = Appointment::query()
             ->where('customer_id', $request->user()->id)
-            ->with(['clinic', 'service', 'nextAppointment', 'prepaidPackage'])
+            ->with(['clinic', 'service', 'nextAppointment', 'prepaidPackage', 'previousAppointment'])
             ->orderByDesc('appointment_date')
             ->orderByDesc('appointment_time')
             ->get()
-            ->map->toApi()
+            ->map(fn (Appointment $appointment) => $this->journeys->decorate($appointment))
             ->values();
 
         return response()->json(['data' => $appointments]);
@@ -62,29 +66,26 @@ class CustomerController extends Controller
     {
         $appointment = Appointment::query()
             ->where('customer_id', $request->user()->id)
-            ->with(['clinic', 'service', 'nextAppointment', 'prepaidPackage'])
+            ->with(['clinic', 'service', 'nextAppointment', 'prepaidPackage', 'previousAppointment'])
             ->findOrFail($id);
 
-        return response()->json(['data' => $appointment->toApi()]);
+        return response()->json(['data' => $this->journeys->decorate($appointment)]);
     }
 
     public function packages(Request $request): JsonResponse
     {
-        $clinicId = $request->query('clinicId', $request->user()->selected_clinic_id);
+        $clinicId = $request->query('clinicId');
 
-        if ($clinicId) {
+        if ($clinicId && $request->boolean('redeemable')) {
             $packages = $this->packageService
                 ->listRedeemable($request->user()->id, (int) $clinicId)
                 ->map->toApi()
                 ->values();
         } else {
-            $packages = $request->user()
-                ->prepaidPackages()
-                ->with(['clinic', 'service'])
-                ->orderByDesc('id')
-                ->get()
-                ->map->toApi()
-                ->values();
+            $packages = $this->journeys->packagesForCustomer(
+                $request->user(),
+                $clinicId ? (int) $clinicId : null,
+            );
         }
 
         return response()->json(['data' => $packages]);

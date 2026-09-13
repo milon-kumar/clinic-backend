@@ -8,6 +8,7 @@ use App\Models\Service;
 use App\Services\AvailabilityService;
 use App\Services\NotificationService;
 use App\Services\SessionWorkflowService;
+use App\Services\TreatmentJourneyService;
 use App\Support\BranchScope;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -21,11 +22,12 @@ class AppointmentController extends Controller
         private AvailabilityService $availabilityService,
         private SessionWorkflowService $sessionWorkflow,
         private NotificationService $notifications,
+        private TreatmentJourneyService $journeys,
     ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $query = Appointment::query()->with(['clinic', 'service', 'customer', 'nextAppointment', 'prepaidPackage']);
+        $query = Appointment::query()->with(['clinic', 'service', 'customer', 'nextAppointment', 'prepaidPackage', 'previousAppointment']);
         BranchScope::apply($query, $request->user());
 
         if ($status = $request->query('status')) {
@@ -51,10 +53,10 @@ class AppointmentController extends Controller
 
     public function show(Request $request, int $id): JsonResponse
     {
-        $appointment = Appointment::query()->with(['clinic', 'service', 'customer', 'nextAppointment', 'prepaidPackage'])->findOrFail($id);
+        $appointment = Appointment::query()->with(['clinic', 'service', 'customer', 'nextAppointment', 'prepaidPackage', 'previousAppointment'])->findOrFail($id);
         BranchScope::assert($request->user(), (int) $appointment->clinic_id);
 
-        return response()->json(['data' => $appointment->toApi()]);
+        return response()->json(['data' => $this->journeys->decorate($appointment)]);
     }
 
     public function store(Request $request): JsonResponse
@@ -191,6 +193,7 @@ class AppointmentController extends Controller
             'action' => ['nullable', 'in:complete,defer'],
             'nextAppointmentDate' => ['nullable', 'date'],
             'nextAppointmentTime' => ['nullable', 'string', 'max:40'],
+            'sessionNotes' => ['nullable', 'string', 'max:4000'],
         ]);
 
         $nextDate = $data['nextAppointmentDate'] ?? null;
@@ -199,14 +202,19 @@ class AppointmentController extends Controller
         if (($data['action'] ?? 'complete') === 'defer') {
             $updated = $this->sessionWorkflow->defer($appointment, $nextDate, $nextTime);
 
-            return response()->json(['data' => $updated->toApi()]);
+            return response()->json(['data' => $this->journeys->decorate($updated)]);
         }
 
-        $result = $this->sessionWorkflow->complete($appointment, $nextDate, $nextTime);
+        $result = $this->sessionWorkflow->complete(
+            $appointment,
+            $nextDate,
+            $nextTime,
+            $data['sessionNotes'] ?? null,
+        );
 
         return response()->json([
-            'data' => $result['appointment']->toApi(),
-            'next' => $result['next']?->toApi(),
+            'data' => $this->journeys->decorate($result['appointment']),
+            'next' => $result['next'] ? $this->journeys->decorate($result['next']) : null,
         ]);
     }
 

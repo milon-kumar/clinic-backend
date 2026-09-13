@@ -41,7 +41,7 @@ class AuthApiTest extends PlatformTestCase
             'otp' => $otp->code,
         ]);
 
-        $verify->assertOk();
+        $verify->assertOk()->assertJsonStructure(['accessToken', 'user' => ['id', 'email', 'firstName']]);
         $this->assertTrue(User::where('email', 'ada@example.com')->first()->is_verified);
     }
 

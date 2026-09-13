@@ -88,12 +88,17 @@ class SessionNotifyApiTest extends PlatformTestCase
 
         $this->patchJson('/api/v1/admin/appointments/'.$appointment->id.'/complete', [
             'action' => 'complete',
+            'sessionNotes' => 'Skin slightly red. Use SPF daily.',
             'nextAppointmentDate' => $nextDate,
             'nextAppointmentTime' => '11:30',
         ])->assertOk()
             ->assertJsonPath('data.status', 'completed')
+            ->assertJsonPath('data.sessionNotes', 'Skin slightly red. Use SPF daily.')
             ->assertJsonPath('next.appointmentDate', $nextDate)
-            ->assertJsonPath('next.appointmentTime', '11:30');
+            ->assertJsonPath('next.appointmentTime', '11:30')
+            ->assertJsonPath('next.previousSessionNotes', 'Skin slightly red. Use SPF daily.')
+            ->assertJsonPath('next.sessionNumber', 2)
+            ->assertJsonPath('next.sessionsRemaining', 5);
 
         $this->assertDatabaseHas('appointments', [
             'id' => $appointment->id,
@@ -106,6 +111,95 @@ class SessionNotifyApiTest extends PlatformTestCase
         ]);
 
         Mail::assertSent(NextSessionMail::class, fn ($mail) => $mail->hasTo($patient->email));
+    }
+
+    public function test_patient_packages_include_remaining_sessions_and_notes(): void
+    {
+        $patient = $this->createUser(['email' => 'journey@example.com']);
+        $clinic = $this->createClinic(['slug' => 'journey', 'code' => 'JOURNEY']);
+        $service = $this->createService();
+        $this->attachServiceToClinic($clinic, $service);
+
+        $package = PrepaidPackage::create([
+            'customer_id' => $patient->id,
+            'clinic_id' => $clinic->id,
+            'service_id' => $service->id,
+            'sessions_total' => 4,
+            'sessions_used' => 1,
+            'status' => 'active',
+        ]);
+
+        Appointment::create([
+            'customer_id' => $patient->id,
+            'clinic_id' => $clinic->id,
+            'service_id' => $service->id,
+            'package_id' => $package->id,
+            'full_name' => $patient->name,
+            'email' => $patient->email,
+            'appointment_date' => now()->subWeek()->toDateString(),
+            'appointment_time' => '10:00',
+            'status' => 'completed',
+            'session_notes' => 'Start on low setting.',
+            'amount_pence' => 0,
+            'qr_token' => 'qr-journey-1',
+        ]);
+
+        Sanctum::actingAs($patient);
+
+        $this->getJson('/api/v1/customers/me/packages')
+            ->assertOk()
+            ->assertJsonPath('data.0.sessionsRemaining', 3)
+            ->assertJsonPath('data.0.sessionsTotal', 4)
+            ->assertJsonPath('data.0.lastSessionNotes', 'Start on low setting.')
+            ->assertJsonPath('data.0.sessions.0.sessionNotes', 'Start on low setting.');
+
+        Sanctum::actingAs($this->createUser(['role' => 'superadmin']));
+
+        $this->getJson('/api/v1/admin/users/'.$patient->id)
+            ->assertOk()
+            ->assertJsonPath('data.treatmentJourneys.treatmentsRemaining', 3)
+            ->assertJsonPath('data.treatmentJourneys.packages.0.lastSessionNotes', 'Start on low setting.');
+
+        $this->getJson('/api/v1/admin/treatment-journeys?search=journey')
+            ->assertOk()
+            ->assertJsonPath('data.0.sessionsRemaining', 3)
+            ->assertJsonPath('data.0.lastSessionNotes', 'Start on low setting.')
+            ->assertJsonPath('data.0.patientEmail', 'journey@example.com');
+    }
+
+    public function test_completed_cash_appointment_appears_in_treatment_journeys(): void
+    {
+        $admin = $this->createUser(['role' => 'superadmin']);
+        $patient = $this->createUser(['email' => 'cash-journey@example.com', 'first_name' => 'Zakaria']);
+        $clinic = $this->createClinic(['slug' => 'cash-journey', 'code' => 'CASH_J']);
+        $service = $this->createService(['name' => 'Laser Hair Removal']);
+        $this->attachServiceToClinic($clinic, $service);
+
+        $appointment = Appointment::create([
+            'customer_id' => $patient->id,
+            'clinic_id' => $clinic->id,
+            'service_id' => $service->id,
+            'full_name' => 'MD Zakaria',
+            'email' => $patient->email,
+            'appointment_date' => now()->toDateString(),
+            'appointment_time' => '10:00',
+            'status' => 'confirmed',
+            'amount_pence' => 29900,
+            'payment_method' => 'cash',
+            'qr_token' => 'qr-cash-1',
+        ]);
+
+        Sanctum::actingAs($admin);
+        $this->patchJson('/api/v1/admin/appointments/'.$appointment->id.'/complete', [
+            'action' => 'complete',
+            'sessionNotes' => 'First pass done.',
+        ])->assertOk()->assertJsonPath('data.status', 'completed');
+
+        $this->getJson('/api/v1/admin/treatment-journeys?search=Zakaria')
+            ->assertOk()
+            ->assertJsonPath('data.0.serviceName', 'Laser Hair Removal')
+            ->assertJsonPath('data.0.sessionsUsed', 1)
+            ->assertJsonPath('data.0.lastSessionNotes', 'First pass done.');
     }
 
     public function test_buy_confirm_sends_purchase_email(): void

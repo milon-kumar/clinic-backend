@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\AppointmentController as AdminAppointmentController;
+use App\Http\Controllers\Api\V1\Admin\TreatmentJourneyController as AdminTreatmentJourneyController;
 use App\Http\Controllers\Api\V1\Admin\ClinicController as AdminClinicController;
 use App\Http\Controllers\Api\V1\Admin\DoctorController as AdminDoctorController;
 use App\Http\Controllers\Api\V1\Admin\InventoryController as AdminInventoryController;
@@ -64,6 +65,7 @@ Route::prefix('api/v1')->group(function () {
     Route::post('contact', [ContactController::class, 'store']);
     Route::get('doctors', [DoctorController::class, 'index']);
     Route::get('doctors/{id}', [DoctorController::class, 'show'])->whereNumber('id');
+    Route::get('book/availability', [BookController::class, 'availability']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::put('session/clinic', [ClinicController::class, 'setSessionClinic']);
@@ -91,7 +93,6 @@ Route::prefix('api/v1')->group(function () {
 
         Route::post('book/cart/prior-treatment', [BookController::class, 'priorTreatment']);
         Route::post('book/cart/addons', [BookController::class, 'addons']);
-        Route::get('book/availability', [BookController::class, 'availability']);
         Route::post('book/holds', [BookController::class, 'createHold']);
         Route::delete('book/holds/{holdId}', [BookController::class, 'releaseHold']);
         Route::post('book/appointments/confirm', [BookController::class, 'confirmAppointment']);
@@ -110,6 +111,7 @@ Route::prefix('api/v1')->group(function () {
             Route::patch('appointments/{id}/confirm', [AdminAppointmentController::class, 'confirm']);
             Route::patch('appointments/{id}/cancel', [AdminAppointmentController::class, 'cancel']);
             Route::patch('appointments/{id}/complete', [AdminAppointmentController::class, 'complete']);
+            Route::get('treatment-journeys', [AdminTreatmentJourneyController::class, 'index']);
             Route::apiResource('appointments', AdminAppointmentController::class);
 
             Route::post('services/upload', [AdminServiceController::class, 'upload']);

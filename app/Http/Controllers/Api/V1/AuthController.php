@@ -84,9 +84,13 @@ class AuthController extends Controller
             ]);
         }
 
+        $user = $user->fresh();
+        $token = $user->createToken('api')->plainTextToken;
+
         return response()->json([
             'message' => 'Email verified successfully.',
-            'user' => $user->fresh()->toApi(),
+            'accessToken' => $token,
+            'user' => $user->toApi(),
         ]);
     }
 

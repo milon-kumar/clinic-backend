@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ClinicStaff;
 use App\Models\User;
+use App\Services\TreatmentJourneyService;
 use App\Support\BranchScope;
 use App\Support\Roles;
 use App\Support\UserMapper;
@@ -14,6 +15,8 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+    public function __construct(private TreatmentJourneyService $journeys) {}
+
     public function index(Request $request): JsonResponse
     {
         $query = User::query()->with('clinic')->orderByDesc('id');
@@ -50,7 +53,12 @@ class UserController extends Controller
         $user = User::query()->with('clinic')->findOrFail($id);
         $this->assertCanManage($request, $user);
 
-        return response()->json(['data' => $user->toApi()]);
+        $payload = $user->toApi();
+        if ($user->role === Roles::PATIENT) {
+            $payload['treatmentJourneys'] = $this->journeys->forCustomer($user);
+        }
+
+        return response()->json(['data' => $payload]);
     }
 
     public function store(Request $request): JsonResponse

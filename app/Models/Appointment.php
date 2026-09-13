@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Appointment extends Model
 {
@@ -17,6 +18,7 @@ class Appointment extends Model
         'phone',
         'email',
         'notes',
+        'session_notes',
         'appointment_date',
         'appointment_time',
         'status',
@@ -60,6 +62,11 @@ class Appointment extends Model
         return $this->belongsTo(self::class, 'next_appointment_id');
     }
 
+    public function previousAppointment(): HasOne
+    {
+        return $this->hasOne(self::class, 'next_appointment_id');
+    }
+
     public function toApi(): array
     {
         return [
@@ -79,6 +86,8 @@ class Appointment extends Model
                 'title' => $this->service?->name,
             ],
             'packageId' => $this->package_id,
+            'sessionsTotal' => $this->prepaidPackage?->sessions_total,
+            'sessionsUsed' => $this->prepaidPackage?->sessions_used,
             'sessionsRemaining' => $this->prepaidPackage?->sessionsRemaining(),
             'appointmentDate' => $this->appointment_date?->toDateString(),
             'appointmentTime' => $this->appointment_time,
@@ -95,6 +104,13 @@ class Appointment extends Model
             'amount' => ((int) $this->amount_pence) / 100,
             'isFree' => (int) $this->amount_pence === 0,
             'notes' => $this->notes,
+            'sessionNotes' => $this->session_notes,
+            'previousSessionNotes' => $this->relationLoaded('previousAppointment')
+                ? $this->previousAppointment?->session_notes
+                : null,
+            'previousAppointmentId' => $this->relationLoaded('previousAppointment')
+                ? $this->previousAppointment?->id
+                : null,
             'qrToken' => $this->qr_token,
         ];
     }
