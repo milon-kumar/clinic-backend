@@ -72,7 +72,7 @@ class ServiceController extends Controller
     public function upload(Request $request): JsonResponse
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'file' => ['required', 'file', 'image', 'max:51200'],
         ]);
 
         $path = $request->file('file')->store('services', 'public');
