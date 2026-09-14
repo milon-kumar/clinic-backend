@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Admin\AppointmentController as AdminAppointmentController;
 use App\Http\Controllers\Api\V1\Admin\TreatmentJourneyController as AdminTreatmentJourneyController;
 use App\Http\Controllers\Api\V1\Admin\ClinicController as AdminClinicController;
+use App\Http\Controllers\Api\V1\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Api\V1\Admin\DoctorController as AdminDoctorController;
 use App\Http\Controllers\Api\V1\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Api\V1\Admin\RoleController as AdminRoleController;
@@ -141,6 +142,9 @@ Route::prefix('api/v1')->group(function () {
             Route::apiResource('users', AdminUserController::class);
 
             Route::get('reports', AdminReportController::class);
+            Route::get('contact-messages', [AdminContactMessageController::class, 'index']);
+            Route::get('contact-messages/{id}', [AdminContactMessageController::class, 'show'])->whereNumber('id');
+            Route::delete('contact-messages/{id}', [AdminContactMessageController::class, 'destroy'])->whereNumber('id');
 
             Route::get('clinics/{id}/staff', [AdminStaffController::class, 'index']);
             Route::post('clinics/{id}/staff', [AdminStaffController::class, 'store']);

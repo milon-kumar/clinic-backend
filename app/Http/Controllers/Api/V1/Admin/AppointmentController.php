@@ -38,6 +38,14 @@ class AppointmentController extends Controller
             $query->where('clinic_id', $clinicId);
         }
 
+        if ($from = $request->query('from')) {
+            $query->whereDate('appointment_date', '>=', $from);
+        }
+
+        if ($to = $request->query('to')) {
+            $query->whereDate('appointment_date', '<=', $to);
+        }
+
         if ($search = $request->query('search', $request->query('q'))) {
             $query->where(function ($q) use ($search) {
                 $q->where('full_name', 'like', "%{$search}%")

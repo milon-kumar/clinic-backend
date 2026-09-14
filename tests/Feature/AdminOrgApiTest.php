@@ -44,6 +44,13 @@ class AdminOrgApiTest extends PlatformTestCase
             ->assertOk()
             ->assertJsonPath('data.orders.revenuePence', 35000)
             ->assertJsonCount(2, 'data.clinics');
+
+        $today = now()->toDateString();
+        $this->getJson("/api/v1/admin/reports?from={$today}&to={$today}")
+            ->assertOk()
+            ->assertJsonPath('data.orders.paidCount', 2)
+            ->assertJsonPath('data.daily.0.date', $today)
+            ->assertJsonPath('data.daily.0.sellCount', 2);
     }
 
     public function test_branch_staff_only_see_their_clinic_revenue(): void

@@ -66,4 +66,21 @@ class AvailabilityServiceTest extends PlatformTestCase
             $this->assertSame('Morning', $slot['timeOfDay']);
         }
     }
+
+    public function test_get_slots_uses_default_hours_when_clinic_has_no_schedule(): void
+    {
+        $clinic = $this->createClinic();
+        ClinicSchedule::query()->where('clinic_id', $clinic->id)->delete();
+        $service = $this->createService();
+        $date = now()->next(Carbon::SUNDAY)->startOfDay();
+
+        $slots = app(AvailabilityService::class)->getSlots(
+            $clinic->id,
+            [$service->id],
+            $date,
+            $date->copy()->endOfDay()
+        );
+
+        $this->assertContains('10:00 AM', $slots->pluck('timeLabel')->all());
+    }
 }

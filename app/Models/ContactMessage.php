@@ -14,4 +14,17 @@ class ContactMessage extends Model
         'subject',
         'message',
     ];
+
+    public function toApi(): array
+    {
+        return [
+            'id' => $this->id,
+            'fullName' => $this->full_name ?? $this->name,
+            'email' => $this->email,
+            'phone' => $this->phone,
+            'subject' => $this->subject,
+            'message' => $this->message,
+            'createdAt' => $this->created_at?->toIso8601String(),
+        ];
+    }
 }

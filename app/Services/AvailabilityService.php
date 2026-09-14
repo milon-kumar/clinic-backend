@@ -51,7 +51,9 @@ class AvailabilityService
             $schedule = $schedules->get($dayOfWeek);
 
             if (! $schedule) {
-                continue;
+                if ($schedules->isNotEmpty()) {
+                    continue;
+                }
             }
 
             if ($this->isClosedOnDate($closures, $date)) {
