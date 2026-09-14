@@ -13,6 +13,7 @@ class ServiceController extends Controller
     {
         $query = Service::query()
             ->where('is_active', true)
+            ->withReviewStats()
             ->with(['packages', 'benefits', 'faqs']);
 
         if ($category = $request->query('category')) {
@@ -51,6 +52,7 @@ class ServiceController extends Controller
     public function show(int $id): JsonResponse
     {
         $service = Service::query()
+            ->withReviewStats()
             ->with(['packages', 'benefits', 'faqs'])
             ->findOrFail($id);
 

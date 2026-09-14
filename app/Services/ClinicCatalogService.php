@@ -15,6 +15,7 @@ class ClinicCatalogService
     {
         $query = Service::query()
             ->where('is_active', true)
+            ->withReviewStats()
             ->with(['packages', 'benefits', 'faqs']);
 
         $services = $query->get();
@@ -37,6 +38,8 @@ class ClinicCatalogService
                 'available' => $availability['ok'],
                 'unavailableReason' => $availability['reason'],
                 'pricePence' => $price['unitPricePence'],
+                'ratingAvg' => round((float) ($service->getAttribute('rating_avg') ?? 0), 1),
+                'ratingCount' => (int) ($service->getAttribute('rating_count') ?? 0),
                 'packages' => $service->packages,
                 'benefits' => $service->benefits,
                 'faqs' => $service->faqs,

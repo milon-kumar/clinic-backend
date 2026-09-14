@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Admin\ClinicController as AdminClinicController;
 use App\Http\Controllers\Api\V1\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Api\V1\Admin\DoctorController as AdminDoctorController;
 use App\Http\Controllers\Api\V1\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\Api\V1\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Api\V1\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Api\V1\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Api\V1\Admin\HomeBlockController as AdminHomeBlockController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Api\V1\CustomerController;
 use App\Http\Controllers\Api\V1\DoctorController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PaymentController;
+use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\ServiceController;
 use App\Http\Controllers\Api\V1\HomeBlockController;
 use App\Http\Controllers\Api\V1\CategoryLandingController;
@@ -61,6 +63,7 @@ Route::prefix('api/v1')->group(function () {
     Route::get('landings', [CategoryLandingController::class, 'index']);
     Route::get('landings/{slug}', [CategoryLandingController::class, 'show']);
     Route::post('contact', [ContactController::class, 'store']);
+    Route::get('reviews', [ReviewController::class, 'index']);
     Route::get('doctors', [DoctorController::class, 'index']);
     Route::get('doctors/{id}', [DoctorController::class, 'show'])->whereNumber('id');
     Route::get('book/availability', [BookController::class, 'availability']);
@@ -101,6 +104,10 @@ Route::prefix('api/v1')->group(function () {
             Route::get('appointments', [CustomerController::class, 'appointments']);
             Route::get('appointments/{id}', [CustomerController::class, 'appointment'])->whereNumber('id');
             Route::get('packages', [CustomerController::class, 'packages']);
+            Route::get('reviews', [ReviewController::class, 'mine']);
+            Route::post('reviews', [ReviewController::class, 'store']);
+            Route::patch('reviews/{id}', [ReviewController::class, 'update'])->whereNumber('id');
+            Route::delete('reviews/{id}', [ReviewController::class, 'destroy'])->whereNumber('id');
         });
 
         Route::prefix('admin')->middleware('staff:superadmin,admin,manager,receptionist,practitioner')->group(function () {
@@ -111,6 +118,7 @@ Route::prefix('api/v1')->group(function () {
             Route::patch('appointments/{id}/complete', [AdminAppointmentController::class, 'complete']);
             Route::get('treatment-journeys', [AdminTreatmentJourneyController::class, 'index']);
             Route::post('treatment-journeys', [AdminTreatmentJourneyController::class, 'store']);
+            Route::post('treatment-journeys/{id}/sessions', [AdminTreatmentJourneyController::class, 'startSession']);
             Route::get('treatment-journeys/{id}', [AdminTreatmentJourneyController::class, 'show']);
             Route::apiResource('appointments', AdminAppointmentController::class);
 
@@ -145,6 +153,11 @@ Route::prefix('api/v1')->group(function () {
             Route::get('contact-messages', [AdminContactMessageController::class, 'index']);
             Route::get('contact-messages/{id}', [AdminContactMessageController::class, 'show'])->whereNumber('id');
             Route::delete('contact-messages/{id}', [AdminContactMessageController::class, 'destroy'])->whereNumber('id');
+
+            Route::get('reviews', [AdminReviewController::class, 'index']);
+            Route::get('reviews/{id}', [AdminReviewController::class, 'show'])->whereNumber('id');
+            Route::patch('reviews/{id}', [AdminReviewController::class, 'update'])->whereNumber('id');
+            Route::delete('reviews/{id}', [AdminReviewController::class, 'destroy'])->whereNumber('id');
 
             Route::get('clinics/{id}/staff', [AdminStaffController::class, 'index']);
             Route::post('clinics/{id}/staff', [AdminStaffController::class, 'store']);

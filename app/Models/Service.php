@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
@@ -65,6 +66,18 @@ class Service extends Model
         return $this->hasMany(ClinicService::class);
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function scopeWithReviewStats(Builder $query): Builder
+    {
+        return $query
+            ->withAvg(['reviews as rating_avg' => fn ($reviews) => $reviews->where('status', Review::STATUS_PUBLISHED)], 'rating')
+            ->withCount(['reviews as rating_count' => fn ($reviews) => $reviews->where('status', Review::STATUS_PUBLISHED)]);
+    }
+
     public function appointmentAmountPence(): int
     {
         return max(0, (int) $this->appointment_amount_pence);
@@ -89,6 +102,7 @@ class Service extends Model
         $same = collect();
         if ($category !== '' || $type !== '') {
             $same = static::query()
+                ->withReviewStats()
                 ->where('is_active', true)
                 ->where('id', '!=', $this->id)
                 ->where(function ($query) use ($category, $type) {
@@ -112,6 +126,7 @@ class Service extends Model
 
         $exclude = $same->pluck('id')->push($this->id);
         $fill = static::query()
+            ->withReviewStats()
             ->where('is_active', true)
             ->whereNotIn('id', $exclude)
             ->with(['packages'])
@@ -146,6 +161,8 @@ class Service extends Model
             'isFeatured' => $this->is_featured,
             'showInMenu' => $this->show_in_menu,
             'allowLocal' => $this->allow_local,
+            'ratingAvg' => round((float) ($this->getAttribute('rating_avg') ?? 0), 1),
+            'ratingCount' => (int) ($this->getAttribute('rating_count') ?? 0),
             'packages' => $this->relationLoaded('packages')
                 ? $this->packages->map(fn (ServicePackage $p) => $p->toApi())->all()
                 : [],

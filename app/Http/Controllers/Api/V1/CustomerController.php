@@ -52,7 +52,7 @@ class CustomerController extends Controller
     {
         $appointments = Appointment::query()
             ->where('customer_id', $request->user()->id)
-            ->with(['clinic', 'service', 'nextAppointment', 'prepaidPackage', 'previousAppointment'])
+            ->with(['clinic', 'service', 'nextAppointment', 'prepaidPackage', 'previousAppointment', 'review'])
             ->orderByDesc('appointment_date')
             ->orderByDesc('appointment_time')
             ->get()
@@ -66,7 +66,7 @@ class CustomerController extends Controller
     {
         $appointment = Appointment::query()
             ->where('customer_id', $request->user()->id)
-            ->with(['clinic', 'service', 'nextAppointment', 'prepaidPackage', 'previousAppointment'])
+            ->with(['clinic', 'service', 'nextAppointment', 'prepaidPackage', 'previousAppointment', 'review'])
             ->findOrFail($id);
 
         return response()->json(['data' => $this->journeys->decorate($appointment)]);

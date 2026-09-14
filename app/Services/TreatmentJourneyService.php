@@ -72,7 +72,7 @@ class TreatmentJourneyService
 
     public function decorate(Appointment $appointment): array
     {
-        $appointment->loadMissing(['clinic', 'service', 'nextAppointment', 'prepaidPackage', 'previousAppointment']);
+        $appointment->loadMissing(['clinic', 'service', 'nextAppointment', 'prepaidPackage', 'previousAppointment', 'review']);
 
         $siblings = $this->journeyAppointments($appointment);
         $number = 1;

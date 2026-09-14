@@ -67,6 +67,11 @@ class Appointment extends Model
         return $this->hasOne(self::class, 'next_appointment_id');
     }
 
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class);
+    }
+
     public function toApi(): array
     {
         return [
@@ -112,6 +117,9 @@ class Appointment extends Model
                 ? $this->previousAppointment?->id
                 : null,
             'qrToken' => $this->qr_token,
+            'reviewId' => $this->relationLoaded('review') ? $this->review?->id : null,
+            'canReview' => $this->status === 'completed'
+                && (! $this->relationLoaded('review') || $this->review === null),
         ];
     }
 }

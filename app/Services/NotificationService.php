@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AppNotification;
 use App\Models\Appointment;
 use App\Models\Order;
+use App\Models\Review;
 use App\Models\User;
 use App\Support\Roles;
 
@@ -100,6 +101,22 @@ class NotificationService
             'clinic_id' => $appointment->clinic_id,
             'data' => ['appointmentId' => $appointment->id],
         ]);
+    }
+
+    public function newReview(Review $review): void
+    {
+        $review->loadMissing(['user', 'clinic', 'service']);
+        $who = $review->user?->name ?: $review->user?->email ?: 'A client';
+        $stars = str_repeat('★', max(1, min(5, (int) $review->rating)));
+        $about = $review->service?->name ?: ($review->clinic?->name ?: 'the clinic');
+
+        $this->notifyStaff((int) ($review->clinic_id ?: 0), [
+            'type' => 'new_review',
+            'title' => 'New review',
+            'body' => "{$who} left {$stars} for {$about}.",
+            'href' => '/Admin/reviews?open='.$review->id,
+            'data' => ['reviewId' => $review->id],
+        ], $review->user_id);
     }
 
     public function appointmentCancelled(Appointment $appointment): void
