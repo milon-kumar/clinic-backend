@@ -101,6 +101,8 @@ Route::prefix('api/v1')->group(function () {
         Route::middleware('verified.email')->prefix('customers/me')->group(function () {
             Route::get('/', [CustomerController::class, 'me']);
             Route::patch('/', [CustomerController::class, 'updateMe']);
+            Route::post('avatar', [CustomerController::class, 'uploadAvatar']);
+            Route::delete('avatar', [CustomerController::class, 'destroyAvatar']);
             Route::get('appointments', [CustomerController::class, 'appointments']);
             Route::get('appointments/{id}', [CustomerController::class, 'appointment'])->whereNumber('id');
             Route::get('packages', [CustomerController::class, 'packages']);

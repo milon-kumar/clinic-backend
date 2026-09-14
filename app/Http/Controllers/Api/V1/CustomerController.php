@@ -8,6 +8,7 @@ use App\Services\PackageService;
 use App\Services\TreatmentJourneyService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class CustomerController extends Controller
 {
@@ -44,6 +45,29 @@ class CustomerController extends Controller
             'address' => $data['address'] ?? $user->address,
             'date_of_birth' => $data['dateOfBirth'] ?? $user->date_of_birth,
         ]);
+
+        return response()->json(['data' => $user->fresh()->toApi()]);
+    }
+
+    public function uploadAvatar(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+
+        $user = $request->user();
+        $path = $request->file('file')->store('avatars', 'public');
+        $this->deleteStoredAvatar($user->avatar);
+        $user->update(['avatar' => '/storage/'.$path]);
+
+        return response()->json(['data' => $user->fresh()->toApi()]);
+    }
+
+    public function destroyAvatar(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $this->deleteStoredAvatar($user->avatar);
+        $user->update(['avatar' => null]);
 
         return response()->json(['data' => $user->fresh()->toApi()]);
     }
@@ -89,5 +113,14 @@ class CustomerController extends Controller
         }
 
         return response()->json(['data' => $packages]);
+    }
+
+    private function deleteStoredAvatar(?string $path): void
+    {
+        if (! $path || ! str_starts_with($path, '/storage/avatars/')) {
+            return;
+        }
+
+        Storage::disk('public')->delete(substr($path, strlen('/storage/')));
     }
 }

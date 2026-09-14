@@ -7,8 +7,10 @@ use App\Models\Otp;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Services\OtpService;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\PlatformTestCase;
 
@@ -77,7 +79,30 @@ class AuthApiTest extends PlatformTestCase
 
         $this->getJson('/api/v1/customers/me')
             ->assertOk()
-            ->assertJsonPath('data.email', $user->email);
+            ->assertJsonPath('data.email', $user->email)
+            ->assertJsonPath('data.avatar', null);
+    }
+
+    public function test_verified_user_can_upload_and_remove_avatar(): void
+    {
+        Storage::fake('public');
+        $user = $this->createUser();
+        Sanctum::actingAs($user);
+
+        $upload = $this->post('/api/v1/customers/me/avatar', [
+            'file' => UploadedFile::fake()->image('photo.jpg', 200, 200),
+        ], ['Accept' => 'application/json']);
+
+        $upload->assertOk();
+        $avatar = $upload->json('data.avatar');
+        $this->assertIsString($avatar);
+        $this->assertStringStartsWith('/storage/avatars/', $avatar);
+        Storage::disk('public')->assertExists(substr($avatar, strlen('/storage/')));
+
+        $this->deleteJson('/api/v1/customers/me/avatar')
+            ->assertOk()
+            ->assertJsonPath('data.avatar', null);
+        $this->assertNull($user->fresh()->avatar);
     }
 
     public function test_forgot_password_sends_otp_without_revealing_accounts(): void
