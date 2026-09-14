@@ -31,7 +31,7 @@ class NotificationService
             'type' => 'new_booking',
             'title' => 'New booking',
             'body' => "{$who} booked {$treatment} for {$when}.",
-            'href' => '/Admin/appointments',
+            'href' => '/Admin/appointments?open='.$appointment->id,
             'data' => ['appointmentId' => $appointment->id],
         ], $appointment->customer_id);
     }
@@ -52,12 +52,13 @@ class NotificationService
         ]);
 
         $who = $order->customer?->name ?: $order->customer?->email ?: 'A client';
+        $packageId = $order->packages->first()?->id;
         $this->notifyStaff((int) $order->clinic_id, [
             'type' => 'new_order',
             'title' => 'New package purchase',
             'body' => "{$who} bought {$sessions} session".($sessions === 1 ? '' : 's').'.',
-            'href' => '/Admin/treatment-orders',
-            'data' => ['orderId' => $order->id],
+            'href' => $packageId ? '/Admin/treatment-orders/'.$packageId : '/Admin/treatment-orders',
+            'data' => ['orderId' => $order->id, 'packageId' => $packageId],
         ], $order->customer_id);
     }
 
@@ -81,7 +82,7 @@ class NotificationService
             'type' => 'next_session',
             'title' => 'Next session set',
             'body' => "{$who}: {$treatment} on {$when}.",
-            'href' => '/Admin/appointments',
+            'href' => '/Admin/appointments?open='.$appointment->id,
             'data' => ['appointmentId' => $appointment->id],
         ], $appointment->customer_id);
     }
