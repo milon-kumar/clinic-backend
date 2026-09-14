@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Appointment;
 use App\Models\Clinic;
 use App\Models\ClinicClosure;
 use App\Models\ClinicSchedule;
 use App\Models\ClinicService;
+use App\Models\Order;
+use App\Models\PrepaidPackage;
 use App\Models\Service;
 use App\Support\BranchScope;
 use Illuminate\Http\JsonResponse;
@@ -63,7 +66,21 @@ class ClinicController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $this->assertOrgAdmin($request);
-        $this->clinicFor($request, $id)->delete();
+        $clinic = $this->clinicFor($request, $id);
+
+        if (Clinic::query()->count() <= 1) {
+            abort(422, 'You cannot delete the last branch.');
+        }
+
+        if (
+            Appointment::query()->where('clinic_id', $clinic->id)->exists()
+            || PrepaidPackage::query()->where('clinic_id', $clinic->id)->exists()
+            || Order::query()->where('clinic_id', $clinic->id)->exists()
+        ) {
+            abort(422, 'This branch has bookings or treatment orders, so it cannot be deleted.');
+        }
+
+        $clinic->delete();
 
         return response()->json(['message' => 'Clinic deleted']);
     }
