@@ -32,6 +32,7 @@ class CatalogController extends Controller
             $offering['id'] = $offering['serviceId'];
             $offering['title'] = $offering['name'];
             $offering['price'] = ($offering['pricePence'] ?? 0) / 100;
+            $offering['images'] = array_values(array_filter($offering['images'] ?? []));
 
             return $offering;
         });
@@ -54,7 +55,7 @@ class CatalogController extends Controller
         $match['faqs'] = collect($match['faqs'])->map(fn ($p) => method_exists($p, 'toApi') ? $p->toApi() : $p)->all();
         $match['id'] = $service->id;
         $match['title'] = $match['name'];
-        $match['images'] = $service->images ?? [];
+        $match['images'] = array_values(array_filter($service->images ?? []));
         $match['price'] = ($match['pricePence'] ?? 0) / 100;
 
         return response()->json(['data' => $match]);

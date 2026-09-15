@@ -62,7 +62,9 @@ class HomeContentApiTest extends PlatformTestCase
         ])->assertCreated()
             ->assertJsonPath('data.slug', 'coolsculpting')
             ->assertJsonPath('data.category', 'body')
-            ->assertJsonPath('data.title', 'CoolSculpting');
+            ->assertJsonPath('data.title', 'CoolSculpting')
+            ->assertJsonPath('data.isActive', true)
+            ->assertJsonPath('data.showInMenu', false);
 
         $this->getJson('/api/v1/landings')
             ->assertOk()
@@ -98,5 +100,47 @@ class HomeContentApiTest extends PlatformTestCase
         $this->patchJson('/api/v1/admin/home-blocks/'.$why->id, [
             'title' => 'Nope',
         ])->assertForbidden();
+    }
+
+    public function test_public_landings_menu_filter_only_returns_listed_categories(): void
+    {
+        $this->actingAsUser($this->createUser(['role' => 'superadmin']));
+
+        $shown = $this->postJson('/api/v1/admin/landings', [
+            'title' => 'Shown Nav Category',
+            'slug' => 'shown-nav-category',
+            'category' => 'shown-nav',
+            'showInMenu' => true,
+        ])->assertCreated()->json('data');
+
+        $this->postJson('/api/v1/admin/landings', [
+            'title' => 'Hidden Nav Category',
+            'slug' => 'hidden-nav-category',
+            'category' => 'hidden-nav',
+            'showInMenu' => false,
+        ])->assertCreated();
+
+        $this->postJson('/api/v1/admin/landings', [
+            'title' => 'Inactive Nav Category',
+            'slug' => 'inactive-nav-category',
+            'category' => 'inactive-nav',
+            'isActive' => false,
+            'showInMenu' => true,
+        ])->assertCreated();
+
+        $this->getJson('/api/v1/landings?menu=1')
+            ->assertOk()
+            ->assertJsonFragment(['slug' => 'shown-nav-category', 'showInMenu' => true])
+            ->assertJsonMissing(['slug' => 'hidden-nav-category'])
+            ->assertJsonMissing(['slug' => 'inactive-nav-category']);
+
+        $this->patchJson('/api/v1/admin/landings/'.$shown['id'], [
+            'isActive' => false,
+        ])->assertOk()
+            ->assertJsonPath('data.isActive', false);
+
+        $this->getJson('/api/v1/landings?menu=1')
+            ->assertOk()
+            ->assertJsonMissing(['slug' => 'shown-nav-category']);
     }
 }

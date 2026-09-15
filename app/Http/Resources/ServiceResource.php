@@ -29,7 +29,7 @@ class ServiceResource extends JsonResource
             'supportsBuy' => $this->supports_buy,
             'supportsBook' => $this->supports_book,
             'coverImage' => $this->cover_image,
-            'images' => $this->images ?? [],
+            'images' => array_values(array_filter($this->images ?? [])),
             'metadata' => $this->metadata_json ?? [],
             'isActive' => $this->is_active,
             'isFeatured' => $this->is_featured,

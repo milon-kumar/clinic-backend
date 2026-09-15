@@ -30,6 +30,7 @@ class CategoryLandingController extends Controller
         $data = $this->validated($request);
         $attrs = $this->attrs($data);
         $attrs['is_active'] = $data['isActive'] ?? true;
+        $attrs['show_in_menu'] = $data['showInMenu'] ?? false;
         if (empty($attrs['category'])) {
             $attrs['category'] = $attrs['title'] ?? $attrs['slug'];
         }
@@ -96,6 +97,7 @@ class CategoryLandingController extends Controller
             'ctaCopy' => ['nullable', 'string'],
             'ctaUrl' => ['nullable', 'string', 'max:255'],
             'isActive' => ['nullable', 'boolean'],
+            'showInMenu' => ['nullable', 'boolean'],
         ]);
     }
 
@@ -116,6 +118,7 @@ class CategoryLandingController extends Controller
             'ctaCopy' => 'cta_copy',
             'ctaUrl' => 'cta_url',
             'isActive' => 'is_active',
+            'showInMenu' => 'show_in_menu',
         ];
 
         if (array_key_exists('slug', $data) || $id === null) {

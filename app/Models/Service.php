@@ -154,7 +154,7 @@ class Service extends Model
             'price' => $this->base_price_pence / 100,
             'appointmentAmountPence' => $this->appointmentAmountPence(),
             'appointmentAmount' => $this->appointmentAmountPence() / 100,
-            'images' => $this->images ?? [],
+            'images' => array_values(array_filter($this->images ?? [])),
             'supportsBuy' => $this->supports_buy,
             'supportsBook' => $this->supports_book,
             'isActive' => $this->is_active,

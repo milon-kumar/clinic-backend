@@ -5,19 +5,23 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\CategoryLanding;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CategoryLandingController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         CategoryLanding::seedDefaults();
 
-        $rows = CategoryLanding::query()
+        $query = CategoryLanding::query()
             ->where('is_active', true)
-            ->orderBy('title')
-            ->get()
-            ->map->toApi()
-            ->values();
+            ->orderBy('title');
+
+        if ($request->boolean('menu')) {
+            $query->where('show_in_menu', true);
+        }
+
+        $rows = $query->get()->map->toApi()->values();
 
         return response()->json(['data' => $rows]);
     }

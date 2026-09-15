@@ -10,7 +10,10 @@ class ClinicCatalogApiTest extends PlatformTestCase
     {
         $reading = $this->createClinic(['name' => 'Reading', 'slug' => 'reading-api', 'code' => 'LCUK_READ_API']);
         $manchester = $this->createClinic(['name' => 'Manchester', 'slug' => 'manchester-api', 'code' => 'LCUK_MAN_API']);
-        $service = $this->createService(['slug' => 'hydrafacial-api']);
+        $service = $this->createService([
+            'slug' => 'hydrafacial-api',
+            'images' => ['/storage/services/hydra.jpg', ''],
+        ]);
 
         $this->attachServiceToClinic($reading, $service);
         $this->attachServiceToClinic($manchester, $service, [
@@ -23,6 +26,7 @@ class ClinicCatalogApiTest extends PlatformTestCase
         $readingCatalog = $this->getJson("/api/v1/clinics/{$reading->id}/services?mode=buy");
         $readingCatalog->assertOk();
         $this->assertCount(1, $readingCatalog->json('data'));
+        $this->assertSame(['/storage/services/hydra.jpg'], $readingCatalog->json('data.0.images'));
 
         $manchesterCatalog = $this->getJson("/api/v1/clinics/{$manchester->id}/services?mode=buy");
         $manchesterCatalog->assertOk();

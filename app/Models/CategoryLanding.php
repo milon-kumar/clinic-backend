@@ -22,6 +22,7 @@ class CategoryLanding extends Model
         'cta_copy',
         'cta_url',
         'is_active',
+        'show_in_menu',
     ];
 
     protected function casts(): array
@@ -30,6 +31,7 @@ class CategoryLanding extends Model
             'benefits' => 'array',
             'aliases' => 'array',
             'is_active' => 'boolean',
+            'show_in_menu' => 'boolean',
         ];
     }
 
@@ -116,6 +118,7 @@ class CategoryLanding extends Model
             'ctaCopy' => $this->cta_copy,
             'ctaUrl' => $this->cta_url,
             'isActive' => $this->is_active,
+            'showInMenu' => (bool) $this->show_in_menu,
         ];
     }
 }
