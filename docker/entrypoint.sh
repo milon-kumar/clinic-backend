@@ -46,12 +46,6 @@ fi
 php artisan migrate --force --no-interaction
 php artisan storage:link --force --no-interaction >/dev/null 2>&1 || true
 
-if [ "${SEED_ON_START:-false}" = "true" ] && [ ! -f storage/app/.seeded ]; then
-  echo "First boot — running database seeders."
-  php artisan db:seed --force --no-interaction
-  touch storage/app/.seeded
-fi
-
 php artisan config:cache --no-interaction >/dev/null 2>&1 || true
 php artisan route:cache --no-interaction >/dev/null 2>&1 || true
 

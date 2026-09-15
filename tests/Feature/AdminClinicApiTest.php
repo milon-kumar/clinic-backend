@@ -48,6 +48,26 @@ class AdminClinicApiTest extends PlatformTestCase
         $this->getJson('/api/v1/admin/reports')->assertForbidden();
     }
 
+    public function test_admin_can_rename_a_branch(): void
+    {
+        $admin = $this->createUser(['role' => 'admin', 'username' => 'renameadmin']);
+        $clinic = $this->createClinic(['name' => 'Reading']);
+        Sanctum::actingAs($admin);
+
+        $this->patchJson("/api/v1/admin/clinics/{$clinic->id}", [
+            'name' => 'Reading Spa',
+            'region' => $clinic->region,
+            'phone' => $clinic->phone,
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.name', 'Reading Spa');
+
+        $this->assertDatabaseHas('clinics', [
+            'id' => $clinic->id,
+            'name' => 'Reading Spa',
+        ]);
+    }
+
     public function test_admin_reports_endpoint(): void
     {
         $admin = $this->createUser(['role' => 'admin', 'username' => 'reporter']);
