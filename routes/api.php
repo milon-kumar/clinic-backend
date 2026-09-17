@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Api\V1\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Api\V1\Admin\HomeBlockController as AdminHomeBlockController;
 use App\Http\Controllers\Api\V1\Admin\CategoryLandingController as AdminCategoryLandingController;
+use App\Http\Controllers\Api\V1\Admin\MotherCategoryController as AdminMotherCategoryController;
 use App\Http\Controllers\Api\V1\Admin\HomeSlideController as AdminHomeSlideController;
 use App\Http\Controllers\Api\V1\Admin\SiteSettingController as AdminSiteSettingController;
 use App\Http\Controllers\Api\V1\Admin\StaffController as AdminStaffController;
@@ -30,6 +31,7 @@ use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\ServiceController;
 use App\Http\Controllers\Api\V1\HomeBlockController;
 use App\Http\Controllers\Api\V1\CategoryLandingController;
+use App\Http\Controllers\Api\V1\MotherCategoryController;
 use App\Http\Controllers\Api\V1\HomeSlideController;
 use App\Http\Controllers\Api\V1\SiteSettingController;
 use Illuminate\Support\Facades\Route;
@@ -62,6 +64,7 @@ Route::prefix('api/v1')->group(function () {
     Route::get('home-blocks', [HomeBlockController::class, 'index']);
     Route::get('landings', [CategoryLandingController::class, 'index']);
     Route::get('landings/{slug}', [CategoryLandingController::class, 'show']);
+    Route::get('mother-categories', [MotherCategoryController::class, 'index']);
     Route::post('contact', [ContactController::class, 'store']);
     Route::get('reviews', [ReviewController::class, 'index']);
     Route::get('doctors', [DoctorController::class, 'index']);
@@ -147,6 +150,11 @@ Route::prefix('api/v1')->group(function () {
             Route::post('landings/upload', [AdminCategoryLandingController::class, 'upload']);
             Route::patch('landings/{id}', [AdminCategoryLandingController::class, 'update'])->whereNumber('id');
             Route::delete('landings/{id}', [AdminCategoryLandingController::class, 'destroy'])->whereNumber('id');
+
+            Route::get('mother-categories', [AdminMotherCategoryController::class, 'index']);
+            Route::post('mother-categories', [AdminMotherCategoryController::class, 'store']);
+            Route::patch('mother-categories/{id}', [AdminMotherCategoryController::class, 'update'])->whereNumber('id');
+            Route::delete('mother-categories/{id}', [AdminMotherCategoryController::class, 'destroy'])->whereNumber('id');
 
             Route::get('roles', [AdminRoleController::class, 'index']);
             Route::apiResource('users', AdminUserController::class);

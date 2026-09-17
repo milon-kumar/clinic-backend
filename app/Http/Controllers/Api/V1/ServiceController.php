@@ -44,7 +44,7 @@ class ServiceController extends Controller
             });
         }
 
-        $services = $query->orderBy('name')->get()->map->toApi()->values();
+        $services = $query->orderedForDisplay()->get()->map->toApi()->values();
 
         return response()->json(['data' => $services]);
     }

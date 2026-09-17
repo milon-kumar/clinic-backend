@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
@@ -11,6 +12,7 @@ class CategoryLanding extends Model
     protected $fillable = [
         'slug',
         'category',
+        'mother_category_id',
         'title',
         'description',
         'hero_image',
@@ -60,6 +62,11 @@ class CategoryLanding extends Model
         }
     }
 
+    public function motherCategory(): BelongsTo
+    {
+        return $this->belongsTo(MotherCategory::class);
+    }
+
     /**
      * First-path segments used by the Next.js app that must not become landing URLs.
      *
@@ -107,6 +114,7 @@ class CategoryLanding extends Model
             'id' => $this->id,
             'slug' => $this->slug,
             'category' => $this->category,
+            'motherCategoryId' => $this->mother_category_id,
             'title' => $this->title,
             'description' => $this->description,
             'heroImage' => $this->hero_image,

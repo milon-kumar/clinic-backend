@@ -25,6 +25,7 @@ class Service extends Model
         'is_active',
         'is_featured',
         'show_in_menu',
+        'sort_order',
         'allow_local',
     ];
 
@@ -37,8 +38,14 @@ class Service extends Model
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
             'show_in_menu' => 'boolean',
+            'sort_order' => 'integer',
             'allow_local' => 'boolean',
         ];
+    }
+
+    public function scopeOrderedForDisplay(Builder $query): Builder
+    {
+        return $query->orderBy('sort_order')->orderBy('name');
     }
 
     public function packages(): HasMany
@@ -114,8 +121,7 @@ class Service extends Model
                     }
                 })
                 ->with(['packages'])
-                ->orderByDesc('is_featured')
-                ->orderBy('name')
+                ->orderedForDisplay()
                 ->limit($limit)
                 ->get();
         }
@@ -130,8 +136,7 @@ class Service extends Model
             ->where('is_active', true)
             ->whereNotIn('id', $exclude)
             ->with(['packages'])
-            ->orderByDesc('is_featured')
-            ->orderBy('name')
+            ->orderedForDisplay()
             ->limit($limit - $same->count())
             ->get();
 
@@ -160,6 +165,7 @@ class Service extends Model
             'isActive' => $this->is_active,
             'isFeatured' => $this->is_featured,
             'showInMenu' => $this->show_in_menu,
+            'sortOrder' => (int) $this->sort_order,
             'allowLocal' => $this->allow_local,
             'ratingAvg' => round((float) ($this->getAttribute('rating_avg') ?? 0), 1),
             'ratingCount' => (int) ($this->getAttribute('rating_count') ?? 0),

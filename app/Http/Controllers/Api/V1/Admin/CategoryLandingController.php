@@ -83,6 +83,7 @@ class CategoryLandingController extends Controller
         return $request->validate([
             'slug' => [$creating ? 'nullable' : 'sometimes', 'nullable', 'string', 'max:80'],
             'category' => ['nullable', 'string', 'max:80'],
+            'motherCategoryId' => ['nullable', 'integer', 'exists:mother_categories,id'],
             'title' => [$creating ? 'required' : 'sometimes', 'required', 'string', 'max:160'],
             'description' => ['nullable', 'string'],
             'heroImage' => ['nullable', 'string', 'max:255'],
@@ -109,6 +110,7 @@ class CategoryLandingController extends Controller
     {
         $map = [
             'category' => 'category',
+            'motherCategoryId' => 'mother_category_id',
             'title' => 'title',
             'description' => 'description',
             'heroImage' => 'hero_image',

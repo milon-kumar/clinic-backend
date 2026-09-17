@@ -13,12 +13,12 @@ class ClinicCatalogService
      */
     public function getServices(int $clinicId, string $mode = 'all'): Collection
     {
-        $query = Service::query()
+        $services = Service::query()
             ->where('is_active', true)
             ->withReviewStats()
-            ->with(['packages', 'benefits', 'faqs']);
-
-        $services = $query->get();
+            ->with(['packages', 'benefits', 'faqs'])
+            ->orderedForDisplay()
+            ->get();
 
         return $services->map(function (Service $service) use ($clinicId, $mode) {
             $availability = $this->isAvailable($clinicId, $service->id, $mode);
@@ -36,6 +36,7 @@ class ClinicCatalogService
                 'durationMinutes' => $service->duration_minutes,
                 'images' => array_values(array_filter($service->images ?? [])),
                 'showInMenu' => (bool) $service->show_in_menu,
+                'sortOrder' => (int) $service->sort_order,
                 'isFeatured' => (bool) $service->is_featured,
                 'supportsBuy' => (bool) $service->supports_buy,
                 'supportsBook' => (bool) $service->supports_book,

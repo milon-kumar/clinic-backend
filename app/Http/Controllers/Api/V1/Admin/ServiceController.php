@@ -19,7 +19,7 @@ class ServiceController extends Controller
     {
         $services = Service::query()
             ->with(['packages', 'benefits', 'faqs', 'clinicServices.clinic'])
-            ->orderBy('name')
+            ->orderedForDisplay()
             ->get()
             ->map->toApi()
             ->values();
@@ -38,7 +38,7 @@ class ServiceController extends Controller
     {
         $this->assertOrgAdmin($request);
         $data = $this->validated($request);
-        $service = Service::create($this->serviceAttrs($data));
+        $service = Service::create($this->serviceAttrs($data, creating: true));
         $this->syncNested($service, $data);
         $this->syncClinics($service, $data, creating: true);
 
@@ -52,7 +52,7 @@ class ServiceController extends Controller
         $this->assertOrgAdmin($request);
         $service = Service::findOrFail($id);
         $data = $this->validated($request, $service->id);
-        $service->update($this->serviceAttrs($data));
+        $service->update($this->serviceAttrs($data, creating: false));
         $this->syncNested($service, $data);
         $this->syncClinics($service, $data, creating: false);
 
@@ -115,6 +115,7 @@ class ServiceController extends Controller
             'isActive' => ['nullable', 'boolean'],
             'isFeatured' => ['nullable', 'boolean'],
             'showInMenu' => ['nullable', 'boolean'],
+            'sortOrder' => ['nullable', 'integer', 'min:0'],
             'allowLocal' => ['nullable', 'boolean'],
             'supportsBuy' => ['nullable', 'boolean'],
             'supportsBook' => ['nullable', 'boolean'],
@@ -128,12 +129,12 @@ class ServiceController extends Controller
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    private function serviceAttrs(array $data): array
+    private function serviceAttrs(array $data, bool $creating = false): array
     {
         $name = $data['name'];
         $slug = $data['slug'] ?? Str::slug($name);
 
-        return [
+        $attrs = [
             'name' => $name,
             'slug' => $slug,
             'sku' => $data['sku'] ?? strtoupper(str_replace('-', '_', $slug)),
@@ -155,6 +156,14 @@ class ServiceController extends Controller
             'supports_buy' => $data['supportsBuy'] ?? true,
             'supports_book' => $data['supportsBook'] ?? true,
         ];
+
+        if (array_key_exists('sortOrder', $data)) {
+            $attrs['sort_order'] = (int) $data['sortOrder'];
+        } elseif ($creating) {
+            $attrs['sort_order'] = ((int) Service::query()->max('sort_order')) + 1;
+        }
+
+        return $attrs;
     }
 
     /**
