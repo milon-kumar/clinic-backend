@@ -85,7 +85,6 @@ class CategoryLanding extends Model
             'chat',
             'checkout',
             'contact',
-            'cosmatic-product',
             'dashboard',
             'doctors',
             'forgot-password',

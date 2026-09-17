@@ -13,10 +13,10 @@ use App\Services\ClinicCatalogService;
 use App\Services\InventoryService;
 use App\Services\InvoiceService;
 use App\Services\PackageService;
+use App\Services\PaymentCheckoutService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class BuyController extends Controller
@@ -28,6 +28,7 @@ class BuyController extends Controller
         private InventoryService $inventoryService,
         private InvoiceService $invoiceService,
         private ClientNotifyService $notify,
+        private PaymentCheckoutService $paymentCheckout,
     ) {}
 
     public function start(Request $request): JsonResponse
@@ -79,14 +80,13 @@ class BuyController extends Controller
     public function paymentIntent(Request $request): JsonResponse
     {
         $cart = $this->buyCart($request);
-        $priced = $this->assertCheckoutable($cart, $request);
-        $session = $this->createPaymentSession($request, $cart, $priced);
+        $checkout = $this->paymentCheckout->startBuy($request->user(), $cart);
 
         return response()->json([
             'data' => [
-                'sessionId' => $session->id,
-                'url' => $this->checkoutUrl($session->id),
-                'amountPence' => $session->amount_pence,
+                'sessionId' => $checkout['session']->id,
+                'url' => $checkout['url'],
+                'amountPence' => $checkout['session']->amount_pence,
             ],
         ]);
     }
@@ -104,6 +104,7 @@ class BuyController extends Controller
             if ($session->customer_id !== $request->user()->id) {
                 abort(403);
             }
+            $this->paymentCheckout->assertStripePaid($session);
             $session->update(['status' => 'paid']);
         }
 
@@ -146,29 +147,6 @@ class BuyController extends Controller
         }
 
         return $priced;
-    }
-
-    private function createPaymentSession(Request $request, Cart $cart, array $priced): PaymentSession
-    {
-        return PaymentSession::create([
-            'id' => 'cs_'.Str::uuid(),
-            'customer_id' => $request->user()->id,
-            'purpose' => 'buy',
-            'payload' => [
-                'cartId' => $cart->id,
-                'clinicId' => $cart->clinic_id,
-            ],
-            'status' => 'pending',
-            'amount_pence' => $priced['summary']['totalPence'],
-            'expires_at' => now()->addMinutes(30),
-        ]);
-    }
-
-    private function checkoutUrl(string $sessionId): string
-    {
-        $front = rtrim(config('app.frontend_url'), '/');
-
-        return $front.'/payment/success?session_id='.$sessionId;
     }
 
     private function createPaidOrder(Request $request, Cart $cart): Order

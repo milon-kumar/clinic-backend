@@ -19,6 +19,8 @@ class Service extends Model
         'duration_minutes',
         'base_price_pence',
         'appointment_amount_pence',
+        'stripe_buy_price_id',
+        'stripe_appointment_price_id',
         'images',
         'supports_buy',
         'supports_book',

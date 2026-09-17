@@ -6,13 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Mail\SiteTestMail;
 use App\Models\SiteSetting;
 use App\Services\MailConfigService;
+use App\Services\StripeAdminService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class SiteSettingController extends Controller
 {
-    public function __construct(private MailConfigService $mailConfig) {}
+    public function __construct(
+        private MailConfigService $mailConfig,
+        private StripeAdminService $stripeAdmin,
+    ) {}
 
     public function show(): JsonResponse
     {
@@ -50,6 +54,10 @@ class SiteSettingController extends Controller
             'mailEncryption' => ['nullable', Rule::in(['tls', 'ssl', 'none'])],
             'mailUsername' => ['nullable', 'string', 'max:255'],
             'mailPassword' => ['nullable', 'string', 'max:255'],
+            'stripeEnabled' => ['sometimes', 'boolean'],
+            'stripePublishableKey' => ['nullable', 'string', 'max:255'],
+            'stripeSecretKey' => ['nullable', 'string', 'max:255'],
+            'stripeWebhookSecret' => ['nullable', 'string', 'max:255'],
         ]);
 
         $settings = SiteSetting::current();
@@ -58,6 +66,15 @@ class SiteSettingController extends Controller
         return response()->json([
             'data' => $settings->fresh()->toAdminApi(),
         ]);
+    }
+
+    public function testStripe(Request $request): JsonResponse
+    {
+        $this->assertOrgAdmin($request);
+
+        $result = $this->stripeAdmin->testConnection();
+
+        return response()->json(['data' => $result], $result['ok'] ? 200 : 422);
     }
 
     public function testEmail(Request $request): JsonResponse
@@ -149,13 +166,19 @@ class SiteSettingController extends Controller
             'mailEncryption' => 'mail_encryption',
             'mailUsername' => 'mail_username',
             'mailPassword' => 'mail_password',
+            'stripeEnabled' => 'stripe_enabled',
+            'stripePublishableKey' => 'stripe_publishable_key',
+            'stripeSecretKey' => 'stripe_secret_key',
+            'stripeWebhookSecret' => 'stripe_webhook_secret',
         ];
+
+        $secretColumns = ['mail_password', 'stripe_secret_key', 'stripe_webhook_secret'];
 
         $attrs = [];
         foreach ($map as $input => $column) {
             if (array_key_exists($input, $data)) {
                 $value = $data[$input];
-                if ($column === 'mail_password' && ($value === null || $value === '')) {
+                if (in_array($column, $secretColumns, true) && ($value === null || $value === '')) {
                     continue;
                 }
                 $attrs[$column] = $value === '' ? null : $value;

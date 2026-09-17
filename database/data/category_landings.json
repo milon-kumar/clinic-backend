@@ -758,41 +758,5 @@
     ],
     "aliases": [],
     "is_active": true
-  },
-  {
-    "slug": "cosmatic-product",
-    "category": "loo",
-    "title": "Cosmetic Product",
-    "description": "",
-    "hero_image": "/Assets/cosmatic-booster.jpeg",
-    "list_title": "Our HydraFacial Treatments",
-    "list_copy": "Choose the treatment that best suits your skin goals.",
-    "cta_title": "Ready For Radiant Skin?",
-    "cta_copy": "Book your HydraFacial treatment today and enjoy healthier, smoother and glowing skin.",
-    "cta_url": "/contact",
-    "benefits": [
-      {
-        "icon": "bi-droplet-fill",
-        "title": "Deep Cleansing",
-        "description": "Removes dirt, oil and impurities from pores."
-      },
-      {
-        "icon": "bi-stars",
-        "title": "Instant Glow",
-        "description": "Leaves your skin radiant immediately."
-      },
-      {
-        "icon": "bi-water",
-        "title": "Hydration",
-        "description": "Restores moisture and skin elasticity."
-      },
-      {
-        "icon": "bi-shield-check",
-        "title": "Healthy Skin",
-        "description": "Supports long-term skin health and balance."
-      }
-    ],
-    "aliases": [],
-    "is_active": true
   }
 ]

@@ -9,6 +9,7 @@ use App\Models\ClinicStaff;
 use App\Models\Order;
 use App\Models\Service;
 use App\Models\User;
+use App\Services\RevenueReportService;
 use App\Support\BranchScope;
 use App\Support\Roles;
 use Carbon\Carbon;
@@ -18,6 +19,10 @@ use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
+    public function __construct(
+        private RevenueReportService $revenue,
+    ) {}
+
     public function __invoke(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -60,17 +65,39 @@ class ReportController extends Controller
             });
         }
 
+        $scoped = ! $user->isSuperAdmin();
+        $paidAppointmentQuery = $this->revenue->paidAppointmentQuery($clinicIds, $scoped, $from, $to);
+        $bookingSummary = $this->revenue->paidAppointmentsSummary($paidAppointmentQuery);
+        $orderRevenuePence = (int) (clone $orderQuery)->sum('total_pence');
+        $stripeSummary = $this->revenue->stripeSummary(
+            $clinicIds,
+            $scoped,
+            $from,
+            $to,
+            $clinicId ? (int) $clinicId : null,
+        );
+
         $clinicRows = $clinics->map(function (Clinic $clinic) use ($from, $to) {
             $appointments = Appointment::query()->where('clinic_id', $clinic->id);
             $paid = Order::query()->where('status', 'paid')->where('clinic_id', $clinic->id);
+            $paidBookings = Appointment::query()
+                ->where('clinic_id', $clinic->id)
+                ->where('payment_status', 'paid')
+                ->where('amount_pence', '>', 0);
             if ($from) {
                 $appointments->whereDate('appointment_date', '>=', $from);
                 $paid->whereDate('paid_at', '>=', $from);
+                $paidBookings->whereDate('created_at', '>=', $from);
             }
             if ($to) {
                 $appointments->whereDate('appointment_date', '<=', $to);
                 $paid->whereDate('paid_at', '<=', $to);
+                $paidBookings->whereDate('created_at', '<=', $to);
             }
+
+            $orderRevenue = (int) (clone $paid)->sum('total_pence');
+            $bookingRevenue = (int) (clone $paidBookings)->sum('amount_pence');
+            $stripe = $this->revenue->stripeSummary([], false, $from, $to, $clinic->id);
 
             return [
                 'id' => $clinic->id,
@@ -79,7 +106,11 @@ class ReportController extends Controller
                 'confirmed' => (clone $appointments)->where('status', 'confirmed')->count(),
                 'staff' => ClinicStaff::where('clinic_id', $clinic->id)->where('is_active', true)->count(),
                 'paidOrders' => (clone $paid)->count(),
-                'revenuePence' => (int) (clone $paid)->sum('total_pence'),
+                'paidBookings' => (clone $paidBookings)->count(),
+                'revenuePence' => $orderRevenue + $bookingRevenue,
+                'orderRevenuePence' => $orderRevenue,
+                'bookingRevenuePence' => $bookingRevenue,
+                'stripeRevenuePence' => $stripe['revenuePence'],
             ];
         });
 
@@ -115,7 +146,16 @@ class ReportController extends Controller
 
         $dailyFrom = $from ?: now()->startOfWeek(Carbon::MONDAY)->toDateString();
         $dailyTo = $to ?: now()->endOfWeek(Carbon::SUNDAY)->toDateString();
-        $daily = $this->dailyRows($appointmentQuery, $orderQuery, $dailyFrom, $dailyTo);
+        $daily = $this->dailyRows(
+            $appointmentQuery,
+            $orderQuery,
+            $paidAppointmentQuery,
+            $dailyFrom,
+            $dailyTo,
+            $scoped,
+            $clinicIds,
+            $clinicId ? (int) $clinicId : null,
+        );
 
         return response()->json([
             'data' => [
@@ -139,8 +179,15 @@ class ReportController extends Controller
                 ],
                 'orders' => [
                     'paidCount' => (clone $orderQuery)->count(),
-                    'revenuePence' => (int) (clone $orderQuery)->sum('total_pence'),
+                    'revenuePence' => $orderRevenuePence,
                 ],
+                'bookings' => $bookingSummary,
+                'revenue' => [
+                    'totalPence' => $orderRevenuePence + $bookingSummary['revenuePence'],
+                    'orderPence' => $orderRevenuePence,
+                    'bookingPence' => $bookingSummary['revenuePence'],
+                ],
+                'stripe' => $stripeSummary,
                 'clinics' => $clinicRows,
                 'daily' => $daily,
                 'sheet' => $sheet,
@@ -151,8 +198,16 @@ class ReportController extends Controller
     /**
      * @return list<array<string, mixed>>
      */
-    private function dailyRows($appointmentQuery, $orderQuery, string $from, string $to): array
-    {
+    private function dailyRows(
+        $appointmentQuery,
+        $orderQuery,
+        $paidAppointmentQuery,
+        string $from,
+        string $to,
+        bool $scoped,
+        array $clinicIds,
+        ?int $clinicId,
+    ): array {
         $appointmentCounts = (clone $appointmentQuery)
             ->selectRaw('DATE(appointment_date) as day, COUNT(*) as total')
             ->whereDate('appointment_date', '>=', $from)
@@ -173,15 +228,25 @@ class ReportController extends Controller
                 'revenuePence' => (int) $row->revenue,
             ]]);
 
+        $bookingDays = $this->revenue->paidAppointmentDailyPence($paidAppointmentQuery, $from, $to);
+        $stripeDays = $this->revenue->stripeDailyPence($from, $to, $clinicId, $scoped, $clinicIds);
+
         $rows = [];
         foreach (CarbonPeriod::create($from, $to) as $date) {
             $key = $date->toDateString();
             $order = $orderDays->get($key, ['sellCount' => 0, 'revenuePence' => 0]);
+            $booking = $bookingDays[$key] ?? ['paidCount' => 0, 'revenuePence' => 0];
+            $orderRevenue = (int) ($order['revenuePence'] ?? 0);
+            $bookingRevenue = (int) ($booking['revenuePence'] ?? 0);
             $rows[] = [
                 'date' => $key,
                 'appointmentCount' => (int) $appointmentCounts->get($key, 0),
                 'sellCount' => (int) ($order['sellCount'] ?? 0),
-                'revenuePence' => (int) ($order['revenuePence'] ?? 0),
+                'bookingCount' => (int) ($booking['paidCount'] ?? 0),
+                'revenuePence' => $orderRevenue + $bookingRevenue,
+                'orderRevenuePence' => $orderRevenue,
+                'bookingRevenuePence' => $bookingRevenue,
+                'stripeRevenuePence' => (int) ($stripeDays[$key] ?? 0),
             ];
         }
 

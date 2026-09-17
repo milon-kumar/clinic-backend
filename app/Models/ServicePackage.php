@@ -13,6 +13,7 @@ class ServicePackage extends Model
         'sessions',
         'discount_percent',
         'price_pence',
+        'stripe_price_id',
     ];
 
     protected function casts(): array

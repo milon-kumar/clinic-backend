@@ -31,10 +31,16 @@ class SiteSetting extends Model
         'mail_encryption',
         'mail_username',
         'mail_password',
+        'stripe_enabled',
+        'stripe_publishable_key',
+        'stripe_secret_key',
+        'stripe_webhook_secret',
     ];
 
     protected $hidden = [
         'mail_password',
+        'stripe_secret_key',
+        'stripe_webhook_secret',
     ];
 
     /**
@@ -70,6 +76,9 @@ class SiteSetting extends Model
             'mail_enabled' => 'boolean',
             'mail_port' => 'integer',
             'mail_password' => 'encrypted',
+            'stripe_enabled' => 'boolean',
+            'stripe_secret_key' => 'encrypted',
+            'stripe_webhook_secret' => 'encrypted',
         ];
     }
 
@@ -128,6 +137,13 @@ class SiteSetting extends Model
             'mailUsername' => $this->mail_username,
             'mailPassword' => '',
             'mailPasswordSet' => filled($this->mail_password),
+            'stripeEnabled' => $this->stripe_enabled !== false,
+            'stripePublishableKey' => $this->stripe_publishable_key ?? '',
+            'stripeSecretKey' => '',
+            'stripeSecretKeySet' => filled($this->stripe_secret_key),
+            'stripeWebhookSecret' => '',
+            'stripeWebhookSecretSet' => filled($this->stripe_webhook_secret),
+            'stripeWebhookUrl' => url('/api/v1/stripe/webhook'),
         ];
     }
 }

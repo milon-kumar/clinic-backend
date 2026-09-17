@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\Admin\MotherCategoryController as AdminMotherCat
 use App\Http\Controllers\Api\V1\Admin\HomeSlideController as AdminHomeSlideController;
 use App\Http\Controllers\Api\V1\Admin\SiteSettingController as AdminSiteSettingController;
 use App\Http\Controllers\Api\V1\Admin\StaffController as AdminStaffController;
+use App\Http\Controllers\Api\V1\Admin\StripeController as AdminStripeController;
 use App\Http\Controllers\Api\V1\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BookController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\Api\V1\CustomerController;
 use App\Http\Controllers\Api\V1\DoctorController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PaymentController;
+use App\Http\Controllers\Api\V1\StripeWebhookController;
 use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\ServiceController;
 use App\Http\Controllers\Api\V1\HomeBlockController;
@@ -70,6 +72,8 @@ Route::prefix('api/v1')->group(function () {
     Route::get('doctors', [DoctorController::class, 'index']);
     Route::get('doctors/{id}', [DoctorController::class, 'show'])->whereNumber('id');
     Route::get('book/availability', [BookController::class, 'availability']);
+    Route::post('stripe/webhook', [StripeWebhookController::class, 'handle']);
+    Route::get('payment/config', [PaymentController::class, 'config']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::put('session/clinic', [ClinicController::class, 'setSessionClinic']);
@@ -134,7 +138,12 @@ Route::prefix('api/v1')->group(function () {
             Route::patch('settings', [AdminSiteSettingController::class, 'update']);
             Route::post('settings/upload', [AdminSiteSettingController::class, 'upload']);
             Route::post('settings/test-email', [AdminSiteSettingController::class, 'testEmail']);
+            Route::post('settings/test-stripe', [AdminSiteSettingController::class, 'testStripe']);
 
+            Route::get('stripe/overview', [AdminStripeController::class, 'overview']);
+            Route::post('stripe/test-connection', [AdminStripeController::class, 'testConnection']);
+            Route::get('stripe/payments', [AdminStripeController::class, 'payments']);
+            Route::get('stripe/payments/{sessionId}', [AdminStripeController::class, 'payment']);
             Route::get('slides', [AdminHomeSlideController::class, 'index']);
             Route::post('slides', [AdminHomeSlideController::class, 'store']);
             Route::post('slides/upload', [AdminHomeSlideController::class, 'upload']);

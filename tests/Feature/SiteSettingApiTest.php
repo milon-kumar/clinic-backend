@@ -158,4 +158,63 @@ class SiteSettingApiTest extends PlatformTestCase
 
         Mail::assertNothingSent();
     }
+
+    public function test_public_settings_do_not_include_stripe_secrets(): void
+    {
+        SiteSetting::current()->update([
+            'stripe_publishable_key' => 'pk_test_public',
+            'stripe_secret_key' => 'sk_test_secret',
+            'stripe_webhook_secret' => 'whsec_test',
+        ]);
+
+        $data = $this->getJson('/api/v1/settings')->assertOk()->json('data');
+
+        $this->assertArrayNotHasKey('stripeSecretKey', $data);
+        $this->assertArrayNotHasKey('stripeWebhookSecret', $data);
+        $this->assertArrayNotHasKey('stripePublishableKey', $data);
+    }
+
+    public function test_superadmin_saves_stripe_config_without_echoing_secrets(): void
+    {
+        $this->actingAsUser($this->createUser(['role' => 'superadmin']));
+
+        $this->patchJson('/api/v1/admin/settings', [
+            'stripeEnabled' => true,
+            'stripePublishableKey' => 'pk_test_saved',
+            'stripeSecretKey' => 'sk_test_saved',
+            'stripeWebhookSecret' => 'whsec_saved',
+        ])->assertOk()
+            ->assertJsonPath('data.stripePublishableKey', 'pk_test_saved')
+            ->assertJsonPath('data.stripeSecretKey', '')
+            ->assertJsonPath('data.stripeSecretKeySet', true)
+            ->assertJsonPath('data.stripeWebhookSecret', '')
+            ->assertJsonPath('data.stripeWebhookSecretSet', true);
+
+        $settings = SiteSetting::current();
+        $this->assertSame('sk_test_saved', $settings->stripe_secret_key);
+        $this->assertSame('whsec_saved', $settings->stripe_webhook_secret);
+
+        $this->patchJson('/api/v1/admin/settings', [
+            'stripePublishableKey' => 'pk_test_saved',
+            'stripeSecretKey' => '',
+        ])->assertOk()
+            ->assertJsonPath('data.stripeSecretKeySet', true);
+
+        $this->assertSame('sk_test_saved', SiteSetting::current()->stripe_secret_key);
+    }
+
+    public function test_payment_config_uses_saved_stripe_keys(): void
+    {
+        SiteSetting::current()->update([
+            'stripe_enabled' => true,
+            'stripe_publishable_key' => 'pk_test_from_db',
+            'stripe_secret_key' => 'sk_test_from_db',
+        ]);
+
+        $this->getJson('/api/v1/payment/config')
+            ->assertOk()
+            ->assertJsonPath('data.stripeEnabled', true)
+            ->assertJsonPath('data.publishableKey', 'pk_test_from_db')
+            ->assertJsonPath('data.mode', 'test');
+    }
 }

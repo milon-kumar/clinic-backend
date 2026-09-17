@@ -3,36 +3,38 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\Appointment;
 use App\Models\Cart;
-use App\Models\Order;
-use App\Models\OrderLine;
 use App\Models\PaymentSession;
 use App\Models\Service;
 use App\Models\SlotHold;
-use App\Services\CartPricingEngine;
-use App\Services\ClientNotifyService;
-use App\Services\InventoryService;
-use App\Services\InvoiceService;
-use App\Services\PackageService;
-use App\Services\SlotHoldService;
+use App\Services\PaymentCheckoutService;
+use App\Services\PaymentFulfillmentService;
+use App\Services\StripeCheckoutService;
+use App\Services\StripeConfigService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 class PaymentController extends Controller
 {
     public function __construct(
-        private CartPricingEngine $pricingEngine,
-        private PackageService $packageService,
-        private SlotHoldService $slotHoldService,
-        private InventoryService $inventoryService,
-        private InvoiceService $invoiceService,
-        private ClientNotifyService $notify,
+        private PaymentCheckoutService $paymentCheckout,
+        private PaymentFulfillmentService $fulfillment,
+        private StripeCheckoutService $stripe,
+        private StripeConfigService $stripeConfig,
     ) {}
+
+    public function config(): JsonResponse
+    {
+        $publishable = $this->stripeConfig->publishableKey();
+
+        return response()->json([
+            'data' => [
+                'stripeEnabled' => $this->stripeConfig->enabled(),
+                'mode' => $this->stripeConfig->mode(),
+                'publishableKey' => filled($publishable) ? $publishable : null,
+            ],
+        ]);
+    }
 
     public function checkout(Request $request): JsonResponse
     {
@@ -61,14 +63,7 @@ class PaymentController extends Controller
                 ['customer_id' => $user->id, 'cart_type' => 'buy'],
                 ['clinic_id' => $user->selected_clinic_id]
             );
-            $priced = $this->pricingEngine->priceCart($cart, $user);
-            if (! $priced['summary']['canCheckout']) {
-                throw ValidationException::withMessages([
-                    'cart' => [$priced['summary']['checkoutBlockReason'] ?? 'Checkout is blocked'],
-                ]);
-            }
-            $amount = $priced['summary']['totalPence'];
-            $payload = ['cartId' => $cart->id, 'clinicId' => $cart->clinic_id];
+            $checkout = $this->paymentCheckout->startBuy($user, $cart);
         } else {
             $serviceId = $data['serviceId'] ?? $data['treatmentId'] ?? null;
             if (! $serviceId && ! empty($data['holdId'])) {
@@ -76,11 +71,6 @@ class PaymentController extends Controller
             }
             $service = $serviceId ? Service::find($serviceId) : null;
             $amount = $service?->appointmentAmountPence() ?? 0;
-            if ($amount === 0) {
-                throw ValidationException::withMessages([
-                    'price' => ['This appointment is free and does not need online payment.'],
-                ]);
-            }
             $payload = [
                 'holdId' => $data['holdId'] ?? null,
                 'clinicId' => $data['clinicId'] ?? $user->selected_clinic_id,
@@ -94,22 +84,15 @@ class PaymentController extends Controller
                 'items' => $data['items'] ?? null,
                 'amountPence' => $amount,
             ];
+            $checkout = $this->paymentCheckout->startBook($user, $amount, $payload, $service);
         }
 
-        $session = PaymentSession::create([
-            'id' => 'cs_'.Str::uuid(),
-            'customer_id' => $user->id,
-            'purpose' => $purpose,
-            'payload' => $payload,
-            'status' => 'pending',
-            'amount_pence' => $amount,
-            'expires_at' => now()->addMinutes(30),
-        ]);
+        $session = $checkout['session'];
 
         return response()->json([
             'sessionId' => $session->id,
-            'url' => rtrim(config('app.frontend_url'), '/').'/payment/success?session_id='.$session->id,
-            'amountPence' => $amount,
+            'url' => $checkout['url'],
+            'amountPence' => $session->amount_pence,
         ]);
     }
 
@@ -122,8 +105,12 @@ class PaymentController extends Controller
         }
 
         if ($session->status === 'pending') {
-            $session = $this->fulfill($session, $request);
-            $this->notifyPaymentResult($session);
+            $this->paymentCheckout->assertStripePaid($session);
+            $result = $this->fulfillment->fulfillIfPending($session, $request->user());
+            $session = $result['session'];
+            if ($result['fulfilled']) {
+                $this->fulfillment->notify($session);
+            }
         }
 
         return response()->json([
@@ -136,108 +123,4 @@ class PaymentController extends Controller
         ]);
     }
 
-    private function fulfill(PaymentSession $session, Request $request): PaymentSession
-    {
-        return DB::transaction(function () use ($session, $request) {
-            $payload = $session->payload ?? [];
-
-            if ($session->purpose === 'buy') {
-                $cart = Cart::findOrFail($payload['cartId']);
-                $priced = $this->pricingEngine->priceCart($cart, $request->user());
-
-                $order = Order::create([
-                    'customer_id' => $request->user()->id,
-                    'clinic_id' => $cart->clinic_id,
-                    'status' => 'paid',
-                    'subtotal_pence' => $priced['summary']['subtotalPence'],
-                    'discount_pence' => $priced['summary']['discountPence'],
-                    'total_pence' => $priced['summary']['totalPence'],
-                    'payment_method' => 'card',
-                    'stripe_session_id' => $session->id,
-                    'paid_at' => now(),
-                ]);
-
-                foreach ($cart->lines as $line) {
-                    OrderLine::create([
-                        'order_id' => $order->id,
-                        'service_id' => $line->service_id,
-                        'quantity' => $line->quantity,
-                        'unit_price_pence' => $line->unit_price_pence,
-                    ]);
-                }
-
-                $this->packageService->createFromOrder($order->load('lines.service'));
-                $this->inventoryService->consumeForOrder($order, $request->user());
-                $this->invoiceService->issueForOrder($order);
-                $cart->lines()->delete();
-                $cart->update(['promo_code' => null]);
-
-                $payload['orderId'] = $order->id;
-            } else {
-                $appointment = null;
-
-                $amountPence = (int) ($payload['amountPence'] ?? $session->amount_pence ?? 0);
-                if (! empty($payload['holdId'])) {
-                    $appointment = $this->slotHoldService->confirmHold($payload['holdId'], [
-                        'customer_id' => $request->user()->id,
-                        'full_name' => $payload['fullName'] ?? $request->user()->name,
-                        'phone' => $payload['phone'] ?? $request->user()->phone,
-                        'email' => $payload['email'] ?? $request->user()->email,
-                        'notes' => $payload['notes'] ?? null,
-                        'amount_pence' => $amountPence,
-                        'payment_method' => 'online',
-                        'payment_status' => 'paid',
-                        'status' => 'confirmed',
-                    ]);
-                } elseif (! empty($payload['serviceId']) && ! empty($payload['appointmentDate'])) {
-                    $appointment = Appointment::create([
-                        'customer_id' => $request->user()->id,
-                        'clinic_id' => $payload['clinicId'] ?? $request->user()->selected_clinic_id,
-                        'service_id' => $payload['serviceId'],
-                        'full_name' => $payload['fullName'] ?? $request->user()->name,
-                        'phone' => $payload['phone'] ?? $request->user()->phone,
-                        'email' => $payload['email'] ?? $request->user()->email,
-                        'notes' => $payload['notes'] ?? null,
-                        'appointment_date' => Carbon::parse($payload['appointmentDate'])->toDateString(),
-                        'appointment_time' => $payload['appointmentTime'] ?? '10:00 AM',
-                        'status' => 'confirmed',
-                        'amount_pence' => $amountPence,
-                        'payment_method' => 'online',
-                        'payment_status' => 'paid',
-                        'qr_token' => (string) Str::uuid(),
-                    ]);
-                }
-
-                if ($appointment) {
-                    $payload['appointmentId'] = $appointment->id;
-                }
-            }
-
-            $session->update([
-                'status' => 'paid',
-                'payload' => $payload,
-            ]);
-
-            return $session->fresh();
-        });
-    }
-
-    private function notifyPaymentResult(PaymentSession $session): void
-    {
-        $payload = $session->payload ?? [];
-
-        if (! empty($payload['orderId'])) {
-            $order = Order::query()->with(['customer', 'clinic', 'lines.service', 'packages.service', 'packages.clinic'])->find($payload['orderId']);
-            if ($order) {
-                $this->notify->purchaseConfirmed($order);
-            }
-        }
-
-        if (! empty($payload['appointmentId'])) {
-            $appointment = Appointment::query()->with(['clinic', 'service', 'customer'])->find($payload['appointmentId']);
-            if ($appointment) {
-                $this->notify->bookingConfirmed($appointment);
-            }
-        }
-    }
 }
