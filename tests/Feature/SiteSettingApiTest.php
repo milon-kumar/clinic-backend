@@ -230,7 +230,41 @@ class SiteSettingApiTest extends PlatformTestCase
         $this->getJson('/api/v1/payment/config')
             ->assertOk()
             ->assertJsonPath('data.stripeEnabled', true)
+            ->assertJsonPath('data.onlinePaymentsAvailable', true)
             ->assertJsonPath('data.publishableKey', 'pk_test_from_db')
             ->assertJsonPath('data.mode', 'test');
+    }
+
+    public function test_checkout_is_blocked_when_stripe_is_not_configured(): void
+    {
+        SiteSetting::current()->update([
+            'stripe_enabled' => false,
+            'stripe_publishable_key' => null,
+            'stripe_secret_key' => null,
+        ]);
+
+        $user = $this->createUser(['role' => 'patient']);
+        $clinic = $this->createClinic();
+        $user->update(['selected_clinic_id' => $clinic->id]);
+        $service = $this->createService(['base_price_pence' => 5000]);
+        $this->attachServiceToClinic($clinic, $service);
+
+        $this->actingAsUser($user);
+
+        $this->getJson('/api/v1/payment/config')
+            ->assertOk()
+            ->assertJsonPath('data.onlinePaymentsAvailable', false);
+
+        $this->postJson('/api/v1/cart/lines', [
+            'serviceId' => $service->id,
+            'quantity' => 1,
+            'clinicId' => $clinic->id,
+            'type' => 'buy',
+        ])->assertOk();
+
+        $this->postJson('/api/v1/payment/checkout', [
+            'purpose' => 'buy',
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors(['payment']);
     }
 }

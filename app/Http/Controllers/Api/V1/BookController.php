@@ -12,6 +12,7 @@ use App\Services\AvailabilityService;
 use App\Services\ClientNotifyService;
 use App\Services\PackageService;
 use App\Services\SlotHoldService;
+use App\Services\StripeConfigService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ class BookController extends Controller
         private SlotHoldService $slotHoldService,
         private PackageService $packageService,
         private ClientNotifyService $notify,
+        private StripeConfigService $stripeConfig,
     ) {}
 
     public function priorTreatment(Request $request): JsonResponse
@@ -153,6 +155,12 @@ class BookController extends Controller
         $paymentMethod = $data['paymentMethod'] ?? 'cash';
         if ($paymentMethod === 'pay_at_clinic') {
             $paymentMethod = 'cash';
+        }
+
+        if ($amountPence > 0 && in_array($paymentMethod, ['online', 'card'], true)) {
+            throw ValidationException::withMessages([
+                'paymentMethod' => ['Online payment must be completed through Stripe Checkout.'],
+            ]);
         }
 
         $appointmentData = [

@@ -6,7 +6,6 @@ use App\Models\Cart;
 use App\Models\PaymentSession;
 use App\Models\Service;
 use App\Models\User;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class PaymentCheckoutService
@@ -14,13 +13,27 @@ class PaymentCheckoutService
     public function __construct(
         private CartPricingEngine $pricingEngine,
         private StripeCheckoutService $stripe,
+        private StripeConfigService $stripeConfig,
     ) {}
+
+    public function assertOnlinePaymentsAvailable(): void
+    {
+        if ($this->stripe->configured()) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'payment' => [$this->stripeConfig->unavailableMessage()],
+        ]);
+    }
 
     /**
      * @return array{session: PaymentSession, url: string}
      */
     public function startBuy(User $user, Cart $cart): array
     {
+        $this->assertOnlinePaymentsAvailable();
+
         $priced = $this->pricingEngine->priceCart($cart, $user);
         if (! $priced['summary']['canCheckout']) {
             throw ValidationException::withMessages([
@@ -52,6 +65,8 @@ class PaymentCheckoutService
      */
     public function startBook(User $user, int $amountPence, array $payload, ?Service $service = null): array
     {
+        $this->assertOnlinePaymentsAvailable();
+
         if ($amountPence <= 0) {
             throw ValidationException::withMessages([
                 'price' => ['This appointment is free and does not need online payment.'],
@@ -103,33 +118,17 @@ class PaymentCheckoutService
         array $payload,
         array $lineItems,
     ): array {
-        if ($this->stripe->configured()) {
-            $stripeSession = $this->stripe->createCheckoutSession(
-                $lineItems,
-                $purpose,
-                (int) $user->id,
-                $user->email,
-            );
+        $this->assertOnlinePaymentsAvailable();
 
-            $session = PaymentSession::create([
-                'id' => $stripeSession->id,
-                'customer_id' => $user->id,
-                'purpose' => $purpose,
-                'payload' => $payload,
-                'status' => 'pending',
-                'amount_pence' => $amountPence,
-                'expires_at' => now()->addMinutes(30),
-            ]);
+        $stripeSession = $this->stripe->createCheckoutSession(
+            $lineItems,
+            $purpose,
+            (int) $user->id,
+            $user->email,
+        );
 
-            return [
-                'session' => $session,
-                'url' => $stripeSession->url,
-            ];
-        }
-
-        $sessionId = 'cs_local_'.Str::uuid();
         $session = PaymentSession::create([
-            'id' => $sessionId,
+            'id' => $stripeSession->id,
             'customer_id' => $user->id,
             'purpose' => $purpose,
             'payload' => $payload,
@@ -140,7 +139,7 @@ class PaymentCheckoutService
 
         return [
             'session' => $session,
-            'url' => $this->stripe->frontendUrl('payment/success').'?session_id='.$sessionId,
+            'url' => $stripeSession->url,
         ];
     }
 }

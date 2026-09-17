@@ -27,11 +27,15 @@ class PaymentController extends Controller
     {
         $publishable = $this->stripeConfig->publishableKey();
 
+        $onlineAvailable = $this->stripeConfig->enabled();
+
         return response()->json([
             'data' => [
-                'stripeEnabled' => $this->stripeConfig->enabled(),
+                'stripeEnabled' => $onlineAvailable,
+                'onlinePaymentsAvailable' => $onlineAvailable,
                 'mode' => $this->stripeConfig->mode(),
                 'publishableKey' => filled($publishable) ? $publishable : null,
+                'message' => $onlineAvailable ? null : $this->stripeConfig->unavailableMessage(),
             ],
         ]);
     }

@@ -27,7 +27,12 @@ class StripeConfigService
             return false;
         }
 
-        return filled($this->secretKey($settings));
+        return filled($this->secretKey($settings)) && filled($this->publishableKey($settings));
+    }
+
+    public function unavailableMessage(): string
+    {
+        return 'Online payment is not available right now. Please contact the clinic or try again later.';
     }
 
     public function publishableKey(?SiteSetting $settings = null): string
