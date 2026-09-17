@@ -56,9 +56,23 @@ class StripeConfigService
         return str_starts_with($this->secretKey($settings), 'sk_live_') ? 'live' : 'test';
     }
 
-    public function webhookUrl(): string
+    public const WEBHOOK_PATH = '/api/v1/stripe/webhook';
+
+    public function webhookBaseUrl(?SiteSetting $settings = null): string
     {
-        return url('/api/v1/stripe/webhook');
+        $settings ??= $this->settings();
+        $custom = trim((string) ($settings?->stripe_webhook_base_url ?? ''));
+
+        if ($custom !== '') {
+            return rtrim($custom, '/');
+        }
+
+        return rtrim((string) config('app.url'), '/');
+    }
+
+    public function webhookUrl(?SiteSetting $settings = null): string
+    {
+        return $this->webhookBaseUrl($settings).self::WEBHOOK_PATH;
     }
 
     public function apply(?SiteSetting $settings = null): void

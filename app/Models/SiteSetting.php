@@ -35,6 +35,7 @@ class SiteSetting extends Model
         'stripe_publishable_key',
         'stripe_secret_key',
         'stripe_webhook_secret',
+        'stripe_webhook_base_url',
     ];
 
     protected $hidden = [
@@ -143,7 +144,10 @@ class SiteSetting extends Model
             'stripeSecretKeySet' => filled($this->stripe_secret_key),
             'stripeWebhookSecret' => '',
             'stripeWebhookSecretSet' => filled($this->stripe_webhook_secret),
-            'stripeWebhookUrl' => url('/api/v1/stripe/webhook'),
+            'stripeWebhookBaseUrl' => $this->stripe_webhook_base_url ?? '',
+            'stripeDefaultWebhookBaseUrl' => rtrim((string) config('app.url'), '/'),
+            'stripeWebhookPath' => '/api/v1/stripe/webhook',
+            'stripeWebhookUrl' => app(\App\Services\StripeConfigService::class)->webhookUrl($this),
         ];
     }
 }

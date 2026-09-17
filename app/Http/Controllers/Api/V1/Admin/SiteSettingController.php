@@ -58,6 +58,7 @@ class SiteSettingController extends Controller
             'stripePublishableKey' => ['nullable', 'string', 'max:255'],
             'stripeSecretKey' => ['nullable', 'string', 'max:255'],
             'stripeWebhookSecret' => ['nullable', 'string', 'max:255'],
+            'stripeWebhookBaseUrl' => ['nullable', 'string', 'max:255'],
         ]);
 
         $settings = SiteSetting::current();
@@ -170,6 +171,7 @@ class SiteSettingController extends Controller
             'stripePublishableKey' => 'stripe_publishable_key',
             'stripeSecretKey' => 'stripe_secret_key',
             'stripeWebhookSecret' => 'stripe_webhook_secret',
+            'stripeWebhookBaseUrl' => 'stripe_webhook_base_url',
         ];
 
         $secretColumns = ['mail_password', 'stripe_secret_key', 'stripe_webhook_secret'];

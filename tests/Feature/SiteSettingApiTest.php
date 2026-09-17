@@ -203,6 +203,22 @@ class SiteSettingApiTest extends PlatformTestCase
         $this->assertSame('sk_test_saved', SiteSetting::current()->stripe_secret_key);
     }
 
+    public function test_superadmin_sets_custom_stripe_webhook_base_url(): void
+    {
+        $this->actingAsUser($this->createUser(['role' => 'superadmin']));
+
+        $this->patchJson('/api/v1/admin/settings', [
+            'stripeWebhookBaseUrl' => 'https://api.example.com/',
+        ])->assertOk()
+            ->assertJsonPath('data.stripeWebhookBaseUrl', 'https://api.example.com/')
+            ->assertJsonPath('data.stripeWebhookUrl', 'https://api.example.com/api/v1/stripe/webhook');
+
+        $this->assertSame(
+            'https://api.example.com/api/v1/stripe/webhook',
+            app(\App\Services\StripeConfigService::class)->webhookUrl(),
+        );
+    }
+
     public function test_payment_config_uses_saved_stripe_keys(): void
     {
         SiteSetting::current()->update([
