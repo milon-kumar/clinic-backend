@@ -15,6 +15,7 @@ class ClientNotifyService
     public function __construct(
         private MailConfigService $mail,
         private NotificationService $notifications,
+        private TreatmentIntakeService $intakes,
     ) {}
 
     public function bookingConfirmed(Appointment $appointment): bool
@@ -38,22 +39,26 @@ class ClientNotifyService
             return false;
         }
 
-        $packages = $order->packages->isNotEmpty()
-            ? $order->packages
-            : $order->lines;
+        return $this->sendPurchaseMail($order, $to);
+    }
 
-        return $this->mail->send(new PurchaseConfirmedMail([
-            'siteName' => $this->siteName(),
-            'customerName' => $order->customer?->name ?: $order->customer?->email ?: 'there',
-            'orderId' => $order->id,
-            'clinicName' => $order->clinic?->name ?: 'your clinic',
-            'total' => ((int) $order->total_pence) / 100,
-            'packages' => $packages->map(fn ($row) => [
-                'name' => $row->service?->name ?: 'Treatment',
-                'sessions' => (int) ($row->sessions_total ?? $row->quantity ?? 1),
-                'clinic' => $row->clinic?->name ?? $order->clinic?->name ?? 'your clinic',
-            ])->all(),
-        ]), $to);
+    /**
+     * Local orders keep their in-app notice. Email the question link only when this treatment asks something.
+     */
+    public function emailPurchaseWhenQuestions(Order $order): bool
+    {
+        $order->loadMissing(['customer', 'clinic', 'lines.service', 'packages.service', 'packages.clinic']);
+        $links = $this->intakes->linksForOrder($order);
+        if ($links === []) {
+            return false;
+        }
+
+        $to = $this->recipient($order->customer?->email);
+        if (! $to) {
+            return false;
+        }
+
+        return $this->sendPurchaseMail($order, $to, $links);
     }
 
     public function nextSession(Appointment $appointment): bool
@@ -73,6 +78,30 @@ class ClientNotifyService
         }
 
         return $sent;
+    }
+
+    /**
+     * @param  array<int, array{name: string, url: string, packageId: int}>|null  $questionLinks
+     */
+    private function sendPurchaseMail(Order $order, string $to, ?array $questionLinks = null): bool
+    {
+        $packages = $order->packages->isNotEmpty()
+            ? $order->packages
+            : $order->lines;
+
+        return $this->mail->send(new PurchaseConfirmedMail([
+            'siteName' => $this->siteName(),
+            'customerName' => $order->customer?->name ?: $order->customer?->email ?: 'there',
+            'orderId' => $order->id,
+            'clinicName' => $order->clinic?->name ?: 'your clinic',
+            'total' => ((int) $order->total_pence) / 100,
+            'packages' => $packages->map(fn ($row) => [
+                'name' => $row->service?->name ?: 'Treatment',
+                'sessions' => (int) ($row->sessions_total ?? $row->quantity ?? 1),
+                'clinic' => $row->clinic?->name ?? $order->clinic?->name ?? 'your clinic',
+            ])->all(),
+            'questionLinks' => $questionLinks ?? $this->intakes->linksForOrder($order),
+        ]), $to);
     }
 
     /**

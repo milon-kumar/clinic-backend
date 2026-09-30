@@ -12,3 +12,10 @@ Your prepaid sessions:
 @endforeach
 
 These sessions stay at the clinic where you bought them. Book your first visit from your account.
+@if (! empty($questionLinks ?? []))
+
+Please answer these questions before your visit:
+@foreach ($questionLinks as $link)
+- {{ $link['name'] }}: {{ $link['url'] }}
+@endforeach
+@endif

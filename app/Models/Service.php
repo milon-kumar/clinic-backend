@@ -65,6 +65,11 @@ class Service extends Model
         return $this->hasMany(ServiceFaq::class);
     }
 
+    public function preQuestions(): HasMany
+    {
+        return $this->hasMany(ServicePreQuestion::class)->orderBy('sort_order')->orderBy('id');
+    }
+
     public function prerequisites(): HasMany
     {
         return $this->hasMany(ServicePrerequisite::class);
@@ -179,6 +184,9 @@ class Service extends Model
                 : [],
             'faqs' => $this->relationLoaded('faqs')
                 ? $this->faqs->map(fn (ServiceFaq $f) => $f->toApi())->all()
+                : [],
+            'preQuestions' => $this->relationLoaded('preQuestions')
+                ? $this->preQuestions->map(fn (ServicePreQuestion $q) => $q->toApi())->values()->all()
                 : [],
             'clinicIds' => $this->relationLoaded('clinicServices')
                 ? $this->clinicServices->pluck('clinic_id')->map(fn ($id) => (int) $id)->values()->all()

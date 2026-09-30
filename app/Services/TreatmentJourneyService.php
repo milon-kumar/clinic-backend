@@ -102,7 +102,7 @@ class TreatmentJourneyService
      */
     public function listForAdmin(User $staff, ?string $search = null, ?int $clinicId = null): array
     {
-        $query = PrepaidPackage::query()->with(['clinic', 'service', 'customer', 'order.lines']);
+        $query = PrepaidPackage::query()->with(['clinic', 'service', 'customer', 'order.lines', 'intake.answers']);
         BranchScope::apply($query, $staff);
 
         if ($clinicId) {
@@ -147,7 +147,7 @@ class TreatmentJourneyService
     public function findForAdmin(User $staff, string $id): array
     {
         if (ctype_digit($id)) {
-            $query = PrepaidPackage::query()->with(['clinic', 'service', 'customer', 'order.lines']);
+            $query = PrepaidPackage::query()->with(['clinic', 'service', 'customer', 'order.lines', 'intake.answers']);
             BranchScope::apply($query, $staff);
             $package = $query->find((int) $id);
             if ($package) {
@@ -169,7 +169,7 @@ class TreatmentJourneyService
      */
     public function packagesForCustomer(User $user, ?int $clinicId = null): array
     {
-        $query = $user->prepaidPackages()->with(['clinic', 'service'])->orderByDesc('id');
+        $query = $user->prepaidPackages()->with(['clinic', 'service', 'intake.answers'])->orderByDesc('id');
 
         if ($clinicId) {
             $query->where('clinic_id', $clinicId);
@@ -191,7 +191,7 @@ class TreatmentJourneyService
      */
     public function packageJourney(PrepaidPackage $package): array
     {
-        $package->loadMissing(['clinic', 'service', 'customer', 'order.lines']);
+        $package->loadMissing(['clinic', 'service', 'customer', 'order.lines', 'intake.answers']);
 
         $appointments = Appointment::query()
             ->where('package_id', $package->id)
@@ -217,6 +217,7 @@ class TreatmentJourneyService
             'bookingDate' => $appointments->first()?->appointment_date?->toDateString()
                 ?? $package->order?->paid_at?->toDateString()
                 ?? $package->created_at?->toDateString(),
+            'intake' => $package->intake?->toApi(),
         ]);
     }
 

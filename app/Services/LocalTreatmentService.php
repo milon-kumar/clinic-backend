@@ -19,6 +19,7 @@ class LocalTreatmentService
         private PackageService $packages,
         private TreatmentJourneyService $journeys,
         private NotificationService $notifications,
+        private ClientNotifyService $notify,
     ) {}
 
     /**
@@ -95,6 +96,7 @@ class LocalTreatmentService
         if ($order) {
             try {
                 $this->notifications->purchaseConfirmed($order);
+                $this->notify->emailPurchaseWhenQuestions($order);
             } catch (\Throwable) {
                 // order still created
             }

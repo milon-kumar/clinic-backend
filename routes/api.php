@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\V1\BuyController;
 use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\CatalogController;
 use App\Http\Controllers\Api\V1\ClinicController;
+use App\Http\Controllers\Api\V1\IntakeController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\CustomerController;
 use App\Http\Controllers\Api\V1\DoctorController;
@@ -60,6 +61,10 @@ Route::prefix('api/v1')->group(function () {
     Route::get('services', [ServiceController::class, 'index']);
     Route::get('services/{serviceId}/prerequisites', [CatalogController::class, 'prerequisites'])->whereNumber('serviceId');
     Route::get('services/{id}', [ServiceController::class, 'show'])->whereNumber('id');
+    Route::get('intake/{token}', [IntakeController::class, 'show'])->where('token', '[A-Za-z0-9]{20,80}');
+    Route::post('intake/{token}', [IntakeController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->where('token', '[A-Za-z0-9]{20,80}');
 
     Route::get('settings', [SiteSettingController::class, 'show']);
     Route::get('slides', [HomeSlideController::class, 'index']);

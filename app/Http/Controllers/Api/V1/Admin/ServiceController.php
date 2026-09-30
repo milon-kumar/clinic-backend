@@ -9,6 +9,7 @@ use App\Models\Service;
 use App\Models\ServiceBenefit;
 use App\Models\ServiceFaq;
 use App\Models\ServicePackage;
+use App\Models\ServicePreQuestion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -18,7 +19,7 @@ class ServiceController extends Controller
     public function index(): JsonResponse
     {
         $services = Service::query()
-            ->with(['packages', 'benefits', 'faqs', 'clinicServices.clinic'])
+            ->with($this->serviceWith())
             ->orderedForDisplay()
             ->get()
             ->map->toApi()
@@ -29,7 +30,7 @@ class ServiceController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $service = Service::query()->with(['packages', 'benefits', 'faqs', 'clinicServices.clinic'])->findOrFail($id);
+        $service = Service::query()->with($this->serviceWith())->findOrFail($id);
 
         return response()->json(['data' => $service->toApi()]);
     }
@@ -43,7 +44,7 @@ class ServiceController extends Controller
         $this->syncClinics($service, $data, creating: true);
 
         return response()->json([
-            'data' => $service->fresh(['packages', 'benefits', 'faqs', 'clinicServices.clinic'])->toApi(),
+            'data' => $service->fresh($this->serviceWith())->toApi(),
         ], 201);
     }
 
@@ -57,7 +58,7 @@ class ServiceController extends Controller
         $this->syncClinics($service, $data, creating: false);
 
         return response()->json([
-            'data' => $service->fresh(['packages', 'benefits', 'faqs', 'clinicServices.clinic'])->toApi(),
+            'data' => $service->fresh($this->serviceWith())->toApi(),
         ]);
     }
 
@@ -112,6 +113,10 @@ class ServiceController extends Controller
             'packages.*.pricePence' => ['nullable', 'integer', 'min:0'],
             'benefits' => ['nullable', 'array'],
             'faqs' => ['nullable', 'array'],
+            'preQuestions' => ['nullable', 'array'],
+            'preQuestions.*.prompt' => ['nullable', 'string', 'max:500'],
+            'preQuestions.*.answerType' => ['nullable', 'string', 'in:yes_no,text'],
+            'preQuestions.*.required' => ['nullable', 'boolean'],
             'isActive' => ['nullable', 'boolean'],
             'isFeatured' => ['nullable', 'boolean'],
             'showInMenu' => ['nullable', 'boolean'],
@@ -221,6 +226,32 @@ class ServiceController extends Controller
                 ]);
             }
         }
+
+        if (array_key_exists('preQuestions', $data)) {
+            $service->preQuestions()->delete();
+            foreach (array_values($data['preQuestions'] ?? []) as $index => $question) {
+                $prompt = trim((string) ($question['prompt'] ?? ''));
+                if ($prompt === '') {
+                    continue;
+                }
+                $type = ($question['answerType'] ?? 'text') === 'yes_no' ? 'yes_no' : 'text';
+                ServicePreQuestion::create([
+                    'service_id' => $service->id,
+                    'prompt' => $prompt,
+                    'answer_type' => $type,
+                    'is_required' => array_key_exists('required', $question) ? (bool) $question['required'] : true,
+                    'sort_order' => $index,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function serviceWith(): array
+    {
+        return ['packages', 'benefits', 'faqs', 'preQuestions', 'clinicServices.clinic'];
     }
 
     /**
