@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CategoryLanding;
 use App\Models\ServiceBenefit;
 use App\Models\ServiceFaq;
 use Tests\PlatformTestCase;
@@ -58,6 +59,65 @@ class ServicePublicApiTest extends PlatformTestCase
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'Menu Laser')
             ->assertJsonPath('data.0.showInMenu', true);
+    }
+
+    public function test_category_questions_are_tagged_onto_each_treatment(): void
+    {
+        CategoryLanding::create([
+            'slug' => 'laser-faq',
+            'category' => 'laser',
+            'title' => 'Laser Hair Removal',
+            'aliases' => ['hair removal'],
+            'faqs' => [
+                ['question' => 'Does it hurt?', 'answer' => 'A light snap.'],
+                ['question' => '  ', 'answer' => 'skip empty'],
+            ],
+            'is_active' => true,
+        ]);
+
+        $matched = $this->createService([
+            'name' => 'Face Laser',
+            'category' => 'Laser',
+            'slug' => 'face-laser',
+        ]);
+        $aliased = $this->createService([
+            'name' => 'Underarm Laser',
+            'category' => 'Hair Removal',
+            'slug' => 'underarm-laser',
+        ]);
+        $other = $this->createService([
+            'name' => 'Botox Brow',
+            'category' => 'Botox',
+            'slug' => 'botox-brow',
+        ]);
+
+        ServiceFaq::create([
+            'service_id' => $matched->id,
+            'question' => 'Does it hurt?',
+            'answer' => 'This copy stays off the page when the category already answers it.',
+        ]);
+        ServiceFaq::create([
+            'service_id' => $matched->id,
+            'question' => 'How many sessions?',
+            'answer' => 'Usually six.',
+        ]);
+
+        $this->getJson('/api/v1/services/'.$matched->id)
+            ->assertOk()
+            ->assertJsonPath('data.faqs.0.question', 'Does it hurt?')
+            ->assertJsonPath('data.faqs.0.answer', 'A light snap.')
+            ->assertJsonPath('data.faqs.0.fromCategory', true)
+            ->assertJsonPath('data.faqs.1.question', 'How many sessions?')
+            ->assertJsonCount(2, 'data.faqs');
+
+        $this->getJson('/api/v1/services/'.$aliased->id)
+            ->assertOk()
+            ->assertJsonPath('data.faqs.0.question', 'Does it hurt?')
+            ->assertJsonCount(1, 'data.faqs');
+
+        $this->getJson('/api/v1/services/'.$other->id)
+            ->assertOk()
+            ->assertJsonCount(0, 'data.faqs');
     }
 
     public function test_superadmin_can_save_benefits_and_faqs(): void

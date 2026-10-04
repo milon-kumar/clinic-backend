@@ -45,9 +45,20 @@ class HomeContentApiTest extends PlatformTestCase
             'benefits' => [
                 ['icon' => 'bi-stars', 'title' => 'Natural look', 'description' => 'Never overdone.'],
             ],
+            'faqs' => [
+                ['question' => 'How long does it last?', 'answer' => 'About three to four months.'],
+                ['question' => '', 'answer' => 'skip'],
+            ],
         ])->assertOk()
             ->assertJsonPath('data.title', 'Botox treatments')
-            ->assertJsonCount(1, 'data.benefits');
+            ->assertJsonCount(1, 'data.benefits')
+            ->assertJsonCount(1, 'data.faqs')
+            ->assertJsonPath('data.faqs.0.question', 'How long does it last?')
+            ->assertJsonPath('data.faqs.0.answer', 'About three to four months.');
+
+        $this->getJson('/api/v1/landings/botox')
+            ->assertOk()
+            ->assertJsonPath('data.faqs.0.question', 'How long does it last?');
     }
 
     public function test_superadmin_can_create_and_delete_category_landing(): void

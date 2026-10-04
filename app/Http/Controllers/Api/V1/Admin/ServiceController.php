@@ -99,6 +99,10 @@ class ServiceController extends Controller
             'category' => ['nullable', 'string', 'max:80'],
             'treatmentType' => ['nullable', 'string', 'max:80'],
             'description' => ['nullable', 'string'],
+            'seoTitle' => ['nullable', 'string', 'max:160'],
+            'seoDescription' => ['nullable', 'string', 'max:320'],
+            'heroTitle' => ['nullable', 'string', 'max:160'],
+            'heroDescription' => ['nullable', 'string'],
             'durationMinutes' => ['nullable', 'integer', 'min:10'],
             'basePricePence' => ['nullable', 'integer', 'min:0'],
             'price' => ['nullable', 'numeric', 'min:0'],
@@ -161,6 +165,18 @@ class ServiceController extends Controller
             'supports_buy' => $data['supportsBuy'] ?? true,
             'supports_book' => $data['supportsBook'] ?? true,
         ];
+
+        foreach ([
+            'seoTitle' => 'seo_title',
+            'seoDescription' => 'seo_description',
+            'heroTitle' => 'hero_title',
+            'heroDescription' => 'hero_description',
+        ] as $input => $column) {
+            if (array_key_exists($input, $data)) {
+                $value = $data[$input];
+                $attrs[$column] = $value === '' || $value === null ? null : $value;
+            }
+        }
 
         if (array_key_exists('sortOrder', $data)) {
             $attrs['sort_order'] = (int) $data['sortOrder'];

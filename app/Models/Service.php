@@ -16,6 +16,10 @@ class Service extends Model
         'category',
         'treatment_type',
         'description',
+        'seo_title',
+        'seo_description',
+        'hero_title',
+        'hero_description',
         'duration_minutes',
         'base_price_pence',
         'appointment_amount_pence',
@@ -161,6 +165,10 @@ class Service extends Model
             'category' => $this->category,
             'treatmentType' => $this->treatment_type,
             'description' => $this->description,
+            'seoTitle' => $this->seo_title,
+            'seoDescription' => $this->seo_description,
+            'heroTitle' => $this->hero_title,
+            'heroDescription' => $this->hero_description,
             'durationMinutes' => $this->duration_minutes,
             'basePricePence' => $this->base_price_pence,
             'price' => $this->base_price_pence / 100,
@@ -182,9 +190,7 @@ class Service extends Model
             'benefits' => $this->relationLoaded('benefits')
                 ? $this->benefits->map(fn (ServiceBenefit $b) => $b->toApi())->all()
                 : [],
-            'faqs' => $this->relationLoaded('faqs')
-                ? $this->faqs->map(fn (ServiceFaq $f) => $f->toApi())->all()
-                : [],
+            'faqs' => $this->publicFaqs(),
             'preQuestions' => $this->relationLoaded('preQuestions')
                 ? $this->preQuestions->map(fn (ServicePreQuestion $q) => $q->toApi())->values()->all()
                 : [],
@@ -201,5 +207,31 @@ class Service extends Model
                 ])->values()->all()
                 : [],
         ];
+    }
+
+    /**
+     * Category questions are tagged onto every treatment in that category.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function publicFaqs(): array
+    {
+        $shared = CategoryLanding::faqsForTreatment($this->category);
+        $own = $this->relationLoaded('faqs')
+            ? $this->faqs->map(fn (ServiceFaq $faq) => $faq->toApi())->all()
+            : [];
+
+        $merged = [];
+        $seen = [];
+        foreach (array_merge($shared, $own) as $faq) {
+            $key = mb_strtolower(trim((string) ($faq['question'] ?? '')));
+            if ($key === '' || isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $merged[] = $faq;
+        }
+
+        return $merged;
     }
 }

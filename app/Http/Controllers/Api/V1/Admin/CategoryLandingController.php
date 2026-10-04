@@ -86,6 +86,10 @@ class CategoryLandingController extends Controller
             'motherCategoryId' => ['nullable', 'integer', 'exists:mother_categories,id'],
             'title' => [$creating ? 'required' : 'sometimes', 'required', 'string', 'max:160'],
             'description' => ['nullable', 'string'],
+            'seoTitle' => ['nullable', 'string', 'max:160'],
+            'seoDescription' => ['nullable', 'string', 'max:320'],
+            'heroTitle' => ['nullable', 'string', 'max:160'],
+            'heroDescription' => ['nullable', 'string'],
             'heroImage' => ['nullable', 'string', 'max:255'],
             'listTitle' => ['nullable', 'string', 'max:160'],
             'listCopy' => ['nullable', 'string', 'max:255'],
@@ -93,6 +97,9 @@ class CategoryLandingController extends Controller
             'benefits.*.icon' => ['nullable', 'string', 'max:80'],
             'benefits.*.title' => ['nullable', 'string', 'max:120'],
             'benefits.*.description' => ['nullable', 'string'],
+            'faqs' => ['nullable', 'array'],
+            'faqs.*.question' => ['nullable', 'string', 'max:300'],
+            'faqs.*.answer' => ['nullable', 'string'],
             'aliases' => ['nullable', 'array'],
             'ctaTitle' => ['nullable', 'string', 'max:160'],
             'ctaCopy' => ['nullable', 'string'],
@@ -113,6 +120,10 @@ class CategoryLandingController extends Controller
             'motherCategoryId' => 'mother_category_id',
             'title' => 'title',
             'description' => 'description',
+            'seoTitle' => 'seo_title',
+            'seoDescription' => 'seo_description',
+            'heroTitle' => 'hero_title',
+            'heroDescription' => 'hero_description',
             'heroImage' => 'hero_image',
             'listTitle' => 'list_title',
             'listCopy' => 'list_copy',
@@ -166,6 +177,10 @@ class CategoryLandingController extends Controller
                 ];
             }
             $attrs['benefits'] = $clean;
+        }
+
+        if (array_key_exists('faqs', $data)) {
+            $attrs['faqs'] = CategoryLanding::cleanFaqs($data['faqs'] ?? []);
         }
 
         if (array_key_exists('aliases', $data)) {

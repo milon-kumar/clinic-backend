@@ -15,10 +15,15 @@ class CategoryLanding extends Model
         'mother_category_id',
         'title',
         'description',
+        'seo_title',
+        'seo_description',
+        'hero_title',
+        'hero_description',
         'hero_image',
         'list_title',
         'list_copy',
         'benefits',
+        'faqs',
         'aliases',
         'cta_title',
         'cta_copy',
@@ -31,6 +36,7 @@ class CategoryLanding extends Model
     {
         return [
             'benefits' => 'array',
+            'faqs' => 'array',
             'aliases' => 'array',
             'is_active' => 'boolean',
             'show_in_menu' => 'boolean',
@@ -60,6 +66,101 @@ class CategoryLanding extends Model
                 $row
             );
         }
+    }
+
+    /**
+     * @param  array<int, mixed>  $rows
+     * @return list<array{question: string, answer: ?string}>
+     */
+    public static function cleanFaqs(array $rows): array
+    {
+        $clean = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $question = trim((string) ($row['question'] ?? ''));
+            if ($question === '') {
+                continue;
+            }
+            $answer = trim((string) ($row['answer'] ?? ''));
+            $clean[] = [
+                'question' => $question,
+                'answer' => $answer !== '' ? $answer : null,
+            ];
+        }
+
+        return $clean;
+    }
+
+    /**
+     * Questions saved on a category page, keyed by category, slug, and aliases.
+     *
+     * @return array<string, list<array{question: string, answer: ?string, fromCategory: true}>>
+     */
+    public static function faqIndex(): array
+    {
+        if (app()->bound('category_landing.faq_index')) {
+            return app('category_landing.faq_index');
+        }
+
+        $index = [];
+        foreach (static::query()->get(['category', 'slug', 'aliases', 'faqs']) as $landing) {
+            $faqs = array_map(
+                fn (array $faq) => $faq + ['fromCategory' => true],
+                static::cleanFaqs($landing->faqs ?? []),
+            );
+            if ($faqs === []) {
+                continue;
+            }
+
+            $keys = array_merge(
+                [$landing->category, $landing->slug],
+                is_array($landing->aliases) ? $landing->aliases : [],
+            );
+            foreach ($keys as $key) {
+                $normalized = mb_strtolower(trim((string) $key));
+                if ($normalized === '') {
+                    continue;
+                }
+                foreach ($faqs as $faq) {
+                    $index[$normalized][] = $faq;
+                }
+            }
+        }
+
+        app()->instance('category_landing.faq_index', $index);
+
+        return $index;
+    }
+
+    /**
+     * Category questions that belong on this treatment.
+     *
+     * @return list<array{question: string, answer: ?string, fromCategory: true}>
+     */
+    public static function faqsForTreatment(?string $category, ?string $slug = null): array
+    {
+        $index = static::faqIndex();
+        $merged = [];
+        $seen = [];
+
+        foreach ([$category, $slug] as $key) {
+            $normalized = mb_strtolower(trim((string) $key));
+            if ($normalized === '' || ! isset($index[$normalized])) {
+                continue;
+            }
+            foreach ($index[$normalized] as $faq) {
+                $dedupe = mb_strtolower($faq['question']);
+                if (isset($seen[$dedupe])) {
+                    continue;
+                }
+                $seen[$dedupe] = true;
+                $merged[] = $faq;
+            }
+        }
+
+        return $merged;
     }
 
     public function motherCategory(): BelongsTo
@@ -116,10 +217,15 @@ class CategoryLanding extends Model
             'motherCategoryId' => $this->mother_category_id,
             'title' => $this->title,
             'description' => $this->description,
+            'seoTitle' => $this->seo_title,
+            'seoDescription' => $this->seo_description,
+            'heroTitle' => $this->hero_title,
+            'heroDescription' => $this->hero_description,
             'heroImage' => $this->hero_image,
             'listTitle' => $this->list_title,
             'listCopy' => $this->list_copy,
             'benefits' => array_values($this->benefits ?? []),
+            'faqs' => static::cleanFaqs($this->faqs ?? []),
             'aliases' => array_values($this->aliases ?? []),
             'ctaTitle' => $this->cta_title,
             'ctaCopy' => $this->cta_copy,

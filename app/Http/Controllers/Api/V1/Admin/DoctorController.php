@@ -176,6 +176,10 @@ class DoctorController extends Controller
             'promises.*.copy' => ['nullable', 'string'],
             'ctaTitle' => ['nullable', 'string', 'max:160'],
             'ctaCopy' => ['nullable', 'string'],
+            'seoTitle' => ['nullable', 'string', 'max:160'],
+            'seoDescription' => ['nullable', 'string', 'max:320'],
+            'heroTitle' => ['nullable', 'string', 'max:160'],
+            'heroDescription' => ['nullable', 'string'],
             'isActive' => ['nullable', 'boolean'],
             'offerAtAllClinics' => ['nullable', 'boolean'],
             'clinicIds' => ['nullable', 'array'],
@@ -204,6 +208,10 @@ class DoctorController extends Controller
             'expertiseTags' => 'expertise_tags',
             'ctaTitle' => 'cta_title',
             'ctaCopy' => 'cta_copy',
+            'seoTitle' => 'seo_title',
+            'seoDescription' => 'seo_description',
+            'heroTitle' => 'hero_title',
+            'heroDescription' => 'hero_description',
         ];
 
         $attrs = [];

@@ -59,6 +59,10 @@ class MotherCategoryController extends Controller
         return $request->validate([
             'title' => [$creating ? 'required' : 'sometimes', 'required', 'string', 'max:160'],
             'slug' => [$creating ? 'nullable' : 'sometimes', 'nullable', 'string', 'max:80'],
+            'seoTitle' => ['nullable', 'string', 'max:160'],
+            'seoDescription' => ['nullable', 'string', 'max:320'],
+            'heroTitle' => ['nullable', 'string', 'max:160'],
+            'heroDescription' => ['nullable', 'string'],
             'sortOrder' => ['nullable', 'integer', 'min:0'],
             'isActive' => ['nullable', 'boolean'],
             'showInMenu' => ['nullable', 'boolean'],
@@ -73,6 +77,10 @@ class MotherCategoryController extends Controller
     {
         $map = [
             'title' => 'title',
+            'seoTitle' => 'seo_title',
+            'seoDescription' => 'seo_description',
+            'heroTitle' => 'hero_title',
+            'heroDescription' => 'hero_description',
             'sortOrder' => 'sort_order',
             'isActive' => 'is_active',
             'showInMenu' => 'show_in_menu',
@@ -97,7 +105,11 @@ class MotherCategoryController extends Controller
         $attrs = [];
         foreach ($map as $input => $column) {
             if (array_key_exists($input, $data)) {
-                $attrs[$column] = $data[$input];
+                $value = $data[$input];
+                if (in_array($column, ['seo_title', 'seo_description', 'hero_title', 'hero_description'], true)) {
+                    $value = $value === '' ? null : $value;
+                }
+                $attrs[$column] = $value;
             }
         }
 
