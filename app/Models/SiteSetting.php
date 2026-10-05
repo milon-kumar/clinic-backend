@@ -9,6 +9,7 @@ class SiteSetting extends Model
     protected $fillable = [
         'site_name',
         'logo',
+        'favicon',
         'website_url',
         'facebook_url',
         'instagram_url',
@@ -52,6 +53,7 @@ class SiteSetting extends Model
         return [
             'site_name' => 'Elixir Clinic',
             'logo' => '/Assets/logo.jpg',
+            'favicon' => null,
             'website_url' => null,
             'facebook_url' => 'https://www.facebook.com',
             'instagram_url' => 'https://instagram.com',
@@ -103,6 +105,7 @@ class SiteSetting extends Model
             'id' => $this->id,
             'siteName' => $this->site_name,
             'logo' => $this->logo,
+            'favicon' => $this->favicon,
             'websiteUrl' => $this->website_url,
             'facebookUrl' => $this->facebook_url,
             'instagramUrl' => $this->instagram_url,

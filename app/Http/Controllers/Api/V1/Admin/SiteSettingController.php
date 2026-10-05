@@ -32,6 +32,7 @@ class SiteSettingController extends Controller
         $data = $request->validate([
             'siteName' => ['sometimes', 'required', 'string', 'max:160'],
             'logo' => ['nullable', 'string', 'max:255'],
+            'favicon' => ['nullable', 'string', 'max:255'],
             'websiteUrl' => ['nullable', 'string', 'max:255'],
             'facebookUrl' => ['nullable', 'string', 'max:255'],
             'instagramUrl' => ['nullable', 'string', 'max:255'],
@@ -122,12 +123,19 @@ class SiteSettingController extends Controller
     {
         $this->assertOrgAdmin($request);
 
+        $kind = $request->input('kind', 'logo');
         $request->validate([
-            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-            'kind' => ['nullable', 'in:logo,about'],
+            'kind' => ['nullable', 'in:logo,about,favicon'],
+            'file' => $kind === 'favicon'
+                ? ['required', 'file', 'extensions:png,jpg,jpeg,webp,ico,gif,svg', 'max:2048']
+                : ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
-        $folder = $request->input('kind') === 'about' ? 'settings/about' : 'settings/logo';
+        $folder = match ($kind) {
+            'about' => 'settings/about',
+            'favicon' => 'settings/favicon',
+            default => 'settings/logo',
+        };
         $path = $request->file('file')->store($folder, 'public');
 
         return response()->json([
@@ -145,6 +153,7 @@ class SiteSettingController extends Controller
         $map = [
             'siteName' => 'site_name',
             'logo' => 'logo',
+            'favicon' => 'favicon',
             'websiteUrl' => 'website_url',
             'facebookUrl' => 'facebook_url',
             'instagramUrl' => 'instagram_url',
