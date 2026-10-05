@@ -70,7 +70,7 @@ class CategoryLanding extends Model
 
     /**
      * @param  array<int, mixed>  $rows
-     * @return list<array{question: string, answer: ?string}>
+     * @return list<array{question: string, answer: ?string, options: list<string>}>
      */
     public static function cleanFaqs(array $rows): array
     {
@@ -84,9 +84,17 @@ class CategoryLanding extends Model
                 continue;
             }
             $answer = trim((string) ($row['answer'] ?? ''));
+            $options = [];
+            foreach ($row['options'] ?? [] as $option) {
+                $label = trim((string) (is_array($option) ? ($option['label'] ?? '') : $option));
+                if ($label !== '') {
+                    $options[] = $label;
+                }
+            }
             $clean[] = [
                 'question' => $question,
                 'answer' => $answer !== '' ? $answer : null,
+                'options' => array_values($options),
             ];
         }
 

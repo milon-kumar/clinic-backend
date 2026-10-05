@@ -49,12 +49,15 @@ class ServiceController extends Controller
         return response()->json(['data' => $services]);
     }
 
-    public function show(int $id): JsonResponse
+    public function show(string $key): JsonResponse
     {
-        $service = Service::query()
+        $query = Service::query()
             ->withReviewStats()
-            ->with(['packages', 'benefits', 'faqs'])
-            ->findOrFail($id);
+            ->with(['packages', 'benefits', 'faqs']);
+
+        $service = ctype_digit($key)
+            ? $query->findOrFail((int) $key)
+            : $query->where('slug', $key)->firstOrFail();
 
         $data = $service->toApi();
         $data['recommended'] = $service->recommendedServices()

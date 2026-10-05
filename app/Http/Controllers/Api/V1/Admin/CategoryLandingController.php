@@ -100,6 +100,8 @@ class CategoryLandingController extends Controller
             'faqs' => ['nullable', 'array'],
             'faqs.*.question' => ['nullable', 'string', 'max:300'],
             'faqs.*.answer' => ['nullable', 'string'],
+            'faqs.*.options' => ['nullable', 'array', 'max:12'],
+            'faqs.*.options.*' => ['nullable', 'string', 'max:200'],
             'aliases' => ['nullable', 'array'],
             'ctaTitle' => ['nullable', 'string', 'max:160'],
             'ctaCopy' => ['nullable', 'string'],

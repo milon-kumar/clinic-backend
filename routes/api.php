@@ -60,7 +60,7 @@ Route::prefix('api/v1')->group(function () {
 
     Route::get('services', [ServiceController::class, 'index']);
     Route::get('services/{serviceId}/prerequisites', [CatalogController::class, 'prerequisites'])->whereNumber('serviceId');
-    Route::get('services/{id}', [ServiceController::class, 'show'])->whereNumber('id');
+    Route::get('services/{key}', [ServiceController::class, 'show'])->where('key', '[A-Za-z0-9\-]+');
     Route::get('intake/{token}', [IntakeController::class, 'show'])->where('token', '[A-Za-z0-9]{20,80}');
     Route::post('intake/{token}', [IntakeController::class, 'store'])
         ->middleware('throttle:20,1')
