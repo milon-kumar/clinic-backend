@@ -217,11 +217,16 @@ class BookController extends Controller
 
     private function mergeResolvedServiceId(Request $request, bool $required = false): void
     {
-        if (! $request->exists('serviceId') && ! $required) {
+        $raw = $request->input('serviceId');
+        if ($raw === null || $raw === '') {
+            $raw = $request->input('treatmentId', $request->input('slug'));
+        }
+
+        if (($raw === null || $raw === '') && ! $required) {
             return;
         }
 
-        $resolved = Service::resolveId($request->input('serviceId'));
+        $resolved = Service::resolveId($raw);
         if ($resolved === null && ($required || $request->filled('serviceId'))) {
             throw ValidationException::withMessages([
                 'serviceId' => $required && ! $request->filled('serviceId')

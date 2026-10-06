@@ -42,6 +42,11 @@ class PaymentController extends Controller
 
     public function checkout(Request $request): JsonResponse
     {
+        $resolvedServiceId = Service::resolveId($request->input('serviceId', $request->input('treatmentId')));
+        if ($resolvedServiceId) {
+            $request->merge(['serviceId' => $resolvedServiceId]);
+        }
+
         $data = $request->validate([
             'items' => ['nullable'],
             'purpose' => ['nullable', 'in:buy,book'],
