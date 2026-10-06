@@ -82,6 +82,8 @@ class BookController extends Controller
 
     public function availability(Request $request): JsonResponse
     {
+        $this->mergeResolvedServiceId($request);
+
         $data = $request->validate([
             'clinicId' => ['required', 'integer', 'exists:clinics,id'],
             'serviceId' => ['nullable', 'integer', 'exists:services,id'],
@@ -107,6 +109,8 @@ class BookController extends Controller
 
     public function createHold(Request $request): JsonResponse
     {
+        $this->mergeResolvedServiceId($request, required: true);
+
         $data = $request->validate([
             'clinicId' => ['required', 'integer', 'exists:clinics,id'],
             'serviceId' => ['required', 'integer', 'exists:services,id'],
@@ -209,6 +213,24 @@ class BookController extends Controller
         return response()->json([
             'data' => $appointment->toApi(),
         ], 201);
+    }
+
+    private function mergeResolvedServiceId(Request $request, bool $required = false): void
+    {
+        if (! $request->exists('serviceId') && ! $required) {
+            return;
+        }
+
+        $resolved = Service::resolveId($request->input('serviceId'));
+        if ($resolved === null && ($required || $request->filled('serviceId'))) {
+            throw ValidationException::withMessages([
+                'serviceId' => $required && ! $request->filled('serviceId')
+                    ? 'The service id field is required.'
+                    : 'That treatment could not be found.',
+            ]);
+        }
+
+        $request->merge(['serviceId' => $resolved]);
     }
 
     private function bookCart(Request $request): Cart

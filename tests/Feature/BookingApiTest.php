@@ -136,6 +136,20 @@ class BookingApiTest extends PlatformTestCase
         ])->assertStatus(422);
     }
 
+    public function test_availability_accepts_treatment_slug(): void
+    {
+        $clinic = $this->createClinic();
+        $service = $this->createService([
+            'slug' => 'masseter-muscle-botox',
+            'duration_minutes' => 30,
+        ]);
+        $this->attachServiceToClinic($clinic, $service);
+
+        $this->getJson('/api/v1/book/availability?from=2026-10-10&to=2026-10-10&clinicId='.$clinic->id.'&serviceId=masseter-muscle-botox')
+            ->assertOk()
+            ->assertJsonStructure(['data']);
+    }
+
     public function test_staff_required_for_admin_routes(): void
     {
         $patient = $this->createUser(['role' => 'patient']);

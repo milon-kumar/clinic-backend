@@ -96,6 +96,21 @@ class Service extends Model
             ->withCount(['reviews as rating_count' => fn ($reviews) => $reviews->where('status', Review::STATUS_PUBLISHED)]);
     }
 
+    public static function resolveId(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_int($value) || (is_string($value) && preg_match('/^\d+$/', $value) === 1)) {
+            return (int) $value;
+        }
+
+        $id = static::query()->where('slug', (string) $value)->value('id');
+
+        return $id ? (int) $id : null;
+    }
+
     public function appointmentAmountPence(): int
     {
         return max(0, (int) $this->appointment_amount_pence);
