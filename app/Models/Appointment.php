@@ -18,6 +18,7 @@ class Appointment extends Model
         'phone',
         'email',
         'notes',
+        'question_answers',
         'session_notes',
         'appointment_date',
         'appointment_time',
@@ -34,6 +35,7 @@ class Appointment extends Model
         return [
             'appointment_date' => 'date',
             'completed_at' => 'datetime',
+            'question_answers' => 'array',
         ];
     }
 
@@ -109,6 +111,7 @@ class Appointment extends Model
             'amount' => ((int) $this->amount_pence) / 100,
             'isFree' => (int) $this->amount_pence === 0,
             'notes' => $this->notes,
+            'questionAnswers' => $this->question_answers ?: [],
             'sessionNotes' => $this->session_notes,
             'previousSessionNotes' => $this->relationLoaded('previousAppointment')
                 ? $this->previousAppointment?->session_notes

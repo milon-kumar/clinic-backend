@@ -57,6 +57,9 @@ class PaymentController extends Controller
             'email' => ['nullable', 'email'],
             'phone' => ['nullable', 'string'],
             'notes' => ['nullable', 'string'],
+            'answers' => ['nullable', 'array'],
+            'answers.*.id' => ['nullable'],
+            'answers.*.answer' => ['nullable', 'string', 'max:2000'],
             'appointmentDate' => ['nullable'],
             'appointmentTime' => ['nullable', 'string'],
             'treatmentId' => ['nullable'],
@@ -79,6 +82,7 @@ class PaymentController extends Controller
                 $serviceId = SlotHold::query()->whereKey($data['holdId'])->value('service_id');
             }
             $service = $serviceId ? Service::find($serviceId) : null;
+            $answers = $service?->bookingAnswers($data['answers'] ?? []) ?? [];
             $amount = $service?->appointmentAmountPence() ?? 0;
             $payload = [
                 'holdId' => $data['holdId'] ?? null,
@@ -88,6 +92,7 @@ class PaymentController extends Controller
                 'email' => $data['email'] ?? $user->email,
                 'phone' => $data['phone'] ?? $user->phone,
                 'notes' => $data['notes'] ?? null,
+                'questionAnswers' => $answers === [] ? null : $answers,
                 'appointmentDate' => $data['appointmentDate'] ?? null,
                 'appointmentTime' => $data['appointmentTime'] ?? null,
                 'items' => $data['items'] ?? null,

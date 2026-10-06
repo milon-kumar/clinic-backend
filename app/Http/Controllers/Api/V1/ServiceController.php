@@ -14,7 +14,7 @@ class ServiceController extends Controller
         $query = Service::query()
             ->where('is_active', true)
             ->withReviewStats()
-            ->with(['packages', 'benefits', 'faqs']);
+            ->with(['packages', 'benefits', 'faqs', 'preQuestions']);
 
         if ($category = $request->query('category')) {
             $needle = mb_strtolower($category);
@@ -53,7 +53,7 @@ class ServiceController extends Controller
     {
         $query = Service::query()
             ->withReviewStats()
-            ->with(['packages', 'benefits', 'faqs']);
+            ->with(['packages', 'benefits', 'faqs', 'preQuestions']);
 
         $service = ctype_digit($key)
             ? $query->findOrFail((int) $key)

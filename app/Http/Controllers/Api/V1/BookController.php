@@ -148,6 +148,9 @@ class BookController extends Controller
             'phone' => ['required', 'string', 'max:40'],
             'email' => ['nullable', 'email'],
             'notes' => ['nullable', 'string', 'max:2000'],
+            'answers' => ['nullable', 'array'],
+            'answers.*.id' => ['nullable'],
+            'answers.*.answer' => ['nullable', 'string', 'max:2000'],
             'paymentMethod' => ['nullable', 'in:cash,online,package,pay_at_clinic,card'],
             'packageId' => ['nullable'],
         ]);
@@ -155,6 +158,7 @@ class BookController extends Controller
         $user = $request->user();
         $hold = SlotHold::findOrFail($data['holdId']);
         $service = Service::find($hold->service_id);
+        $answers = $service?->bookingAnswers($data['answers'] ?? []) ?? [];
         $amountPence = $service?->appointmentAmountPence() ?? 0;
         $paymentMethod = $data['paymentMethod'] ?? 'cash';
         if ($paymentMethod === 'pay_at_clinic') {
@@ -173,6 +177,7 @@ class BookController extends Controller
             'phone' => $data['phone'],
             'email' => $data['email'] ?? $user->email,
             'notes' => $data['notes'] ?? null,
+            'question_answers' => $answers === [] ? null : $answers,
             'amount_pence' => $amountPence,
             'payment_method' => $amountPence === 0 ? 'free' : $paymentMethod,
             'payment_status' => $amountPence === 0 ? 'free' : ($paymentMethod === 'cash' ? 'pay_at_clinic' : 'paid'),

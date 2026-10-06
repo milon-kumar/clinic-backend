@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 
 class Service extends Model
 {
@@ -222,6 +223,49 @@ class Service extends Model
                 ])->values()->all()
                 : [],
         ];
+    }
+
+    /**
+     * @param  array<int, mixed>  $submitted
+     * @return list<array<string, mixed>>
+     */
+    public function bookingAnswers(array $submitted): array
+    {
+        $this->loadMissing('preQuestions');
+        $given = [];
+        foreach ($submitted as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $given[(string) ($row['id'] ?? '')] = trim((string) ($row['answer'] ?? ''));
+        }
+
+        $saved = [];
+        $missing = [];
+        foreach ($this->preQuestions as $question) {
+            $answer = $given[(string) $question->id] ?? '';
+            if ($question->answer_type === 'yes_no' && ! in_array($answer, ['yes', 'no'], true)) {
+                $answer = '';
+            }
+            if ($question->is_required && $answer === '') {
+                $missing[] = $question->prompt;
+            }
+            $saved[] = [
+                'id' => $question->id,
+                'prompt' => $question->prompt,
+                'answerType' => $question->answer_type,
+                'required' => (bool) $question->is_required,
+                'answer' => $answer === '' ? null : $answer,
+            ];
+        }
+
+        if ($missing !== []) {
+            throw ValidationException::withMessages([
+                'answers' => ['Please answer: '.implode(', ', $missing)],
+            ]);
+        }
+
+        return $saved;
     }
 
     /**
