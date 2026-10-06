@@ -52,7 +52,7 @@ class ClinicCatalogService
                 'ratingCount' => (int) ($service->getAttribute('rating_count') ?? 0),
                 'packages' => $service->packages,
                 'benefits' => $service->benefits,
-                'faqs' => $service->faqs,
+                'faqs' => $service->inheritedFaqs(),
             ];
         })->filter(function (array $offering) use ($mode) {
             if ($mode === 'buy') {

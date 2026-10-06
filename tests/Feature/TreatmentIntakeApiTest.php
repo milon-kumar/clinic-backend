@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Mail\PurchaseConfirmedMail;
-use App\Models\ServicePreQuestion;
+use App\Models\CategoryLanding;
 use Illuminate\Support\Facades\Mail;
 use Tests\PlatformTestCase;
 
@@ -19,19 +19,15 @@ class TreatmentIntakeApiTest extends PlatformTestCase
         $service = $this->createService(['name' => 'Hydrafacial', 'base_price_pence' => 12000]);
         $this->attachServiceToClinic($clinic, $service);
 
-        ServicePreQuestion::create([
-            'service_id' => $service->id,
-            'prompt' => 'Are you pregnant?',
-            'answer_type' => 'yes_no',
-            'is_required' => true,
-            'sort_order' => 0,
-        ]);
-        ServicePreQuestion::create([
-            'service_id' => $service->id,
-            'prompt' => 'List any allergies',
-            'answer_type' => 'text',
-            'is_required' => true,
-            'sort_order' => 1,
+        CategoryLanding::create([
+            'slug' => 'skin-faq',
+            'category' => 'skin',
+            'title' => 'Skin',
+            'faqs' => [
+                ['question' => 'Are you pregnant?', 'options' => ['yes', 'no']],
+                ['question' => 'List any allergies', 'answer' => ''],
+            ],
+            'is_active' => true,
         ]);
 
         $customer->update(['selected_clinic_id' => $clinic->id]);

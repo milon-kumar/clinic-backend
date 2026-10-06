@@ -34,7 +34,7 @@ class ServicePublicApiTest extends PlatformTestCase
         $this->getJson('/api/v1/services/'.$featured->id)
             ->assertOk()
             ->assertJsonPath('data.benefits.0.title', 'Long-lasting results')
-            ->assertJsonPath('data.faqs.0.question', 'How many sessions?')
+            ->assertJsonCount(0, 'data.faqs')
             ->assertJsonPath('data.isFeatured', true);
 
         $this->getJson('/api/v1/services?featured=1')
@@ -107,8 +107,7 @@ class ServicePublicApiTest extends PlatformTestCase
             ->assertJsonPath('data.faqs.0.question', 'Does it hurt?')
             ->assertJsonPath('data.faqs.0.answer', 'A light snap.')
             ->assertJsonPath('data.faqs.0.fromCategory', true)
-            ->assertJsonPath('data.faqs.1.question', 'How many sessions?')
-            ->assertJsonCount(2, 'data.faqs');
+            ->assertJsonCount(1, 'data.faqs');
 
         $this->getJson('/api/v1/services/'.$aliased->id)
             ->assertOk()
@@ -141,7 +140,7 @@ class ServicePublicApiTest extends PlatformTestCase
             ->assertJsonPath('data.isFeatured', true)
             ->assertJsonPath('data.showInMenu', false)
             ->assertJsonCount(1, 'data.benefits')
-            ->assertJsonPath('data.faqs.0.question', 'Does it hurt?')
+            ->assertJsonCount(0, 'data.faqs')
             ->assertJsonPath('data.appointmentAmount', 45)
             ->assertJsonPath('data.appointmentAmountPence', 4500);
     }

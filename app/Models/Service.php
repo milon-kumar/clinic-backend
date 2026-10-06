@@ -206,7 +206,7 @@ class Service extends Model
             'benefits' => $this->relationLoaded('benefits')
                 ? $this->benefits->map(fn (ServiceBenefit $b) => $b->toApi())->all()
                 : [],
-            'faqs' => $this->publicFaqs(),
+            'faqs' => $this->inheritedFaqs(),
             'preQuestions' => $this->relationLoaded('preQuestions')
                 ? $this->preQuestions->map(fn (ServicePreQuestion $q) => $q->toApi())->values()->all()
                 : [],
@@ -250,8 +250,11 @@ class Service extends Model
             if ($question->answer_type === 'choice' && ! in_array($answer, $question->choiceOptions(), true)) {
                 $answer = '';
             }
-            if ($question->is_required && $answer === '') {
-                $missing[] = $question->prompt;
+            if ($answer === '') {
+                if ($question->is_required) {
+                    $missing[] = $question->prompt;
+                }
+                continue;
             }
             $saved[] = [
                 'id' => $question->id,
@@ -303,28 +306,41 @@ class Service extends Model
     }
 
     /**
-     * Category questions are tagged onto every treatment in that category.
+     * Questions the client can answer when booking, or later from the email link.
      *
-     * @return list<array<string, mixed>>
+     * @return list<array{prompt: string, answer_type: string, options: ?list<string>, is_required: bool}>
      */
-    private function publicFaqs(): array
+    public function bookingQuestionRows(): array
     {
-        $shared = CategoryLanding::faqsForTreatment($this->category);
-        $own = $this->relationLoaded('faqs')
-            ? $this->faqs->map(fn (ServiceFaq $faq) => $faq->toApi())->all()
-            : [];
-
-        $merged = [];
+        $rows = [];
         $seen = [];
-        foreach (array_merge($shared, $own) as $faq) {
-            $key = mb_strtolower(trim((string) ($faq['question'] ?? '')));
-            if ($key === '' || isset($seen[$key])) {
+
+        foreach ($this->inheritedFaqs() as $faq) {
+            $prompt = trim((string) ($faq['question'] ?? ''));
+            $key = mb_strtolower($prompt);
+            if ($prompt === '' || isset($seen[$key])) {
                 continue;
             }
             $seen[$key] = true;
-            $merged[] = $faq;
+            $options = ServicePreQuestion::cleanOptions($faq['options'] ?? []);
+            $rows[] = [
+                'prompt' => $prompt,
+                'answer_type' => $options === [] ? 'text' : 'choice',
+                'options' => $options === [] ? null : $options,
+                'is_required' => false,
+            ];
         }
 
-        return $merged;
+        return $rows;
+    }
+
+    /**
+     * Category questions are inherited by every treatment in that category.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function inheritedFaqs(): array
+    {
+        return CategoryLanding::faqsForTreatment($this->category, $this->slug);
     }
 }

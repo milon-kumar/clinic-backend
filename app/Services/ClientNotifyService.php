@@ -24,6 +24,10 @@ class ClientNotifyService
         $this->safeNotify(fn () => $this->notifications->bookingConfirmed($appointment));
         $to = $this->recipient($appointment->email, $appointment->customer?->email);
         if (! $to) {
+            Log::warning('Booking confirmation email skipped: no recipient', [
+                'appointmentId' => $appointment->id,
+            ]);
+
             return false;
         }
 
@@ -109,7 +113,18 @@ class ClientNotifyService
      */
     private function appointmentPayload(Appointment $appointment): array
     {
-        $questions = $this->intakes->openForAppointment($appointment);
+        $questionUrl = null;
+        try {
+            $questions = $this->intakes->openForAppointment($appointment);
+            if ($questions && ! $questions->submitted_at) {
+                $questionUrl = $questions->publicUrl();
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Booking question link was not added to the email', [
+                'appointmentId' => $appointment->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return [
             'siteName' => $this->siteName(),
@@ -119,7 +134,7 @@ class ClientNotifyService
             'appointmentDate' => $appointment->appointment_date?->toFormattedDateString() ?: (string) $appointment->appointment_date,
             'appointmentTime' => $appointment->appointment_time,
             'appointmentId' => $appointment->id,
-            'questionUrl' => $questions && ! $questions->submitted_at ? $questions->publicUrl() : null,
+            'questionUrl' => $questionUrl,
         ];
     }
 

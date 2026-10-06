@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Services\PackageService;
+use App\Services\TreatmentIntakeService;
 use App\Services\TreatmentJourneyService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,6 +16,7 @@ class CustomerController extends Controller
     public function __construct(
         private PackageService $packageService,
         private TreatmentJourneyService $journeys,
+        private TreatmentIntakeService $intakes,
     ) {}
 
     public function me(Request $request): JsonResponse
@@ -80,7 +82,7 @@ class CustomerController extends Controller
             ->orderByDesc('appointment_date')
             ->orderByDesc('appointment_time')
             ->get()
-            ->map(fn (Appointment $appointment) => $this->journeys->decorate($appointment))
+            ->map(fn (Appointment $appointment) => $this->journeys->decorate($this->withQuestionLink($appointment)))
             ->values();
 
         return response()->json(['data' => $appointments]);
@@ -93,7 +95,7 @@ class CustomerController extends Controller
             ->with(['clinic', 'service', 'nextAppointment', 'prepaidPackage', 'previousAppointment', 'review', 'intake.answers'])
             ->findOrFail($id);
 
-        return response()->json(['data' => $this->journeys->decorate($appointment)]);
+        return response()->json(['data' => $this->journeys->decorate($this->withQuestionLink($appointment))]);
     }
 
     public function packages(Request $request): JsonResponse
@@ -122,5 +124,18 @@ class CustomerController extends Controller
         }
 
         Storage::disk('public')->delete(substr($path, strlen('/storage/')));
+    }
+
+    private function withQuestionLink(Appointment $appointment): Appointment
+    {
+        try {
+            $this->intakes->openForAppointment($appointment);
+            $appointment->unsetRelation('intake');
+            $appointment->load('intake.answers');
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return $appointment;
     }
 }

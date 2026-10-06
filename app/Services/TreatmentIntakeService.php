@@ -36,9 +36,9 @@ class TreatmentIntakeService
             return $existing;
         }
 
-        $package->loadMissing('service.preQuestions');
-        $questions = $package->service?->preQuestions;
-        if ($questions === null || $questions->isEmpty()) {
+        $package->loadMissing('service');
+        $questions = $package->service?->bookingQuestionRows() ?? [];
+        if ($questions === []) {
             return null;
         }
 
@@ -50,16 +50,7 @@ class TreatmentIntakeService
                     'token' => Str::random(48),
                 ]);
 
-                foreach ($questions->values() as $index => $question) {
-                    TreatmentIntakeAnswer::create([
-                        'treatment_intake_id' => $intake->id,
-                        'prompt' => $question->prompt,
-                        'answer_type' => $question->answer_type,
-                        'options' => $question->choiceOptions() === [] ? null : $question->choiceOptions(),
-                        'is_required' => (bool) $question->is_required,
-                        'sort_order' => $index,
-                    ]);
-                }
+                $this->appendQuestions($intake, $questions);
 
                 return $intake->load('answers');
             });
@@ -81,36 +72,36 @@ class TreatmentIntakeService
             ->where('appointment_id', $appointment->id)
             ->first();
 
-        if ($existing) {
+        $appointment->loadMissing('service');
+        $questions = $appointment->service?->bookingQuestionRows() ?? [];
+        if ($questions === []) {
             return $existing;
         }
 
-        $appointment->loadMissing('service.preQuestions');
-        $questions = $appointment->service?->preQuestions;
-        if ($questions === null || $questions->isEmpty()) {
-            return null;
-        }
-
         try {
-            return DB::transaction(function () use ($appointment, $questions) {
-                $intake = TreatmentIntake::create([
+            return DB::transaction(function () use ($appointment, $questions, $existing) {
+                $intake = $existing ?: TreatmentIntake::create([
                     'appointment_id' => $appointment->id,
                     'token' => Str::random(48),
                 ]);
 
-                foreach ($questions->values() as $index => $question) {
-                    TreatmentIntakeAnswer::create([
-                        'treatment_intake_id' => $intake->id,
-                        'prompt' => $question->prompt,
-                        'answer_type' => $question->answer_type,
-                        'options' => $question->choiceOptions() === [] ? null : $question->choiceOptions(),
-                        'is_required' => (bool) $question->is_required,
-                        'sort_order' => $index,
-                    ]);
+                $before = $intake->answers()->count();
+                $this->appendQuestions($intake, $questions);
+                $intake->unsetRelation('answers');
+                $intake->load('answers');
+                if ($intake->answers->count() > $before && $intake->submitted_at) {
+                    $intake->update(['submitted_at' => null]);
+                }
+
+                if (! $intake->submitted_at) {
+                    $this->applySavedAnswers($intake, $appointment->question_answers ?? []);
                 }
 
                 $intake->load('answers');
-                $this->applySavedAnswers($intake, $appointment->question_answers ?? []);
+                $hasAnswer = $intake->answers->contains(fn (TreatmentIntakeAnswer $item) => filled($item->answer));
+                if ($intake->submitted_at && ! $hasAnswer) {
+                    $intake->update(['submitted_at' => null]);
+                }
 
                 return $intake->fresh('answers');
             });
@@ -119,6 +110,36 @@ class TreatmentIntakeService
                 ->with('answers')
                 ->where('appointment_id', $appointment->id)
                 ->first();
+        }
+    }
+
+    /**
+     * @param  list<array{prompt: string, answer_type: string, options: ?list<string>, is_required: bool}>  $questions
+     */
+    private function appendQuestions(TreatmentIntake $intake, array $questions): void
+    {
+        $intake->loadMissing('answers');
+        $known = $intake->answers
+            ->map(fn (TreatmentIntakeAnswer $item) => mb_strtolower(trim($item->prompt)))
+            ->all();
+        $sort = (int) $intake->answers->max('sort_order');
+
+        foreach ($questions as $question) {
+            $prompt = trim((string) ($question['prompt'] ?? ''));
+            $key = mb_strtolower($prompt);
+            if ($prompt === '' || in_array($key, $known, true)) {
+                continue;
+            }
+            $known[] = $key;
+            $sort++;
+            TreatmentIntakeAnswer::create([
+                'treatment_intake_id' => $intake->id,
+                'prompt' => $prompt,
+                'answer_type' => $question['answer_type'] ?? 'text',
+                'options' => $question['options'] ?? null,
+                'is_required' => (bool) ($question['is_required'] ?? false),
+                'sort_order' => $sort,
+            ]);
         }
     }
 
@@ -134,15 +155,16 @@ class TreatmentIntakeService
         $byPrompt = collect($saved)->keyBy(
             fn ($row) => mb_strtolower(trim((string) ($row['prompt'] ?? '')))
         );
-        $complete = true;
+        $complete = $intake->answers->isNotEmpty();
 
         foreach ($intake->answers as $item) {
             $row = $byPrompt->get(mb_strtolower(trim($item->prompt)));
             $value = trim((string) ($row['answer'] ?? ''));
-            if ($item->is_required && $value === '') {
+            if ($value === '' || ! $this->answerMatches($item, $value)) {
                 $complete = false;
+                continue;
             }
-            if ($value !== '') {
+            if ($item->answer !== $value) {
                 $item->update(['answer' => $value]);
             }
         }
@@ -150,6 +172,19 @@ class TreatmentIntakeService
         if ($complete) {
             $intake->update(['submitted_at' => now()]);
         }
+    }
+
+    private function answerMatches(TreatmentIntakeAnswer $item, string $value): bool
+    {
+        if ($item->answer_type === 'yes_no') {
+            return in_array(strtolower($value), ['yes', 'no'], true);
+        }
+
+        if ($item->answer_type === 'choice') {
+            return in_array($value, array_values($item->options ?? []), true);
+        }
+
+        return true;
     }
 
     /**
