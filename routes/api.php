@@ -80,7 +80,7 @@ Route::prefix('api/v1')->group(function () {
     Route::post('stripe/webhook', [StripeWebhookController::class, 'handle']);
     Route::get('payment/config', [PaymentController::class, 'config']);
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'verified.email'])->group(function () {
         Route::put('session/clinic', [ClinicController::class, 'setSessionClinic']);
 
         Route::get('notifications', [NotificationController::class, 'index']);
@@ -110,7 +110,7 @@ Route::prefix('api/v1')->group(function () {
         Route::delete('book/holds/{holdId}', [BookController::class, 'releaseHold']);
         Route::post('book/appointments/confirm', [BookController::class, 'confirmAppointment']);
 
-        Route::middleware('verified.email')->prefix('customers/me')->group(function () {
+        Route::prefix('customers/me')->group(function () {
             Route::get('/', [CustomerController::class, 'me']);
             Route::patch('/', [CustomerController::class, 'updateMe']);
             Route::post('avatar', [CustomerController::class, 'uploadAvatar']);
@@ -123,7 +123,9 @@ Route::prefix('api/v1')->group(function () {
             Route::patch('reviews/{id}', [ReviewController::class, 'update'])->whereNumber('id');
             Route::delete('reviews/{id}', [ReviewController::class, 'destroy'])->whereNumber('id');
         });
+    });
 
+    Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('admin')->middleware('staff:superadmin,admin,manager,receptionist,practitioner')->group(function () {
             Route::get('appointments/stats', [AdminAppointmentController::class, 'stats']);
             Route::get('appointments/availability', [AdminAppointmentController::class, 'availability']);
