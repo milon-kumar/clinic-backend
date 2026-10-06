@@ -11,6 +11,7 @@ class TreatmentIntakeAnswer extends Model
         'treatment_intake_id',
         'prompt',
         'answer_type',
+        'options',
         'is_required',
         'sort_order',
         'answer',
@@ -19,6 +20,7 @@ class TreatmentIntakeAnswer extends Model
     protected function casts(): array
     {
         return [
+            'options' => 'array',
             'is_required' => 'boolean',
             'sort_order' => 'integer',
         ];
@@ -35,6 +37,9 @@ class TreatmentIntakeAnswer extends Model
             'id' => $this->id,
             'prompt' => $this->prompt,
             'answerType' => $this->answer_type,
+            'options' => $this->answer_type === 'yes_no'
+                ? ['Yes', 'No']
+                : array_values($this->options ?? []),
             'required' => (bool) $this->is_required,
             'answer' => $this->answer,
         ];

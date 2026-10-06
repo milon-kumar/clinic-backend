@@ -158,7 +158,10 @@ class BookController extends Controller
         $user = $request->user();
         $hold = SlotHold::findOrFail($data['holdId']);
         $service = Service::find($hold->service_id);
-        $answers = $service?->bookingAnswers($data['answers'] ?? []) ?? [];
+        $submittedAnswers = $data['answers'] ?? [];
+        $answers = ($service && $submittedAnswers !== [])
+            ? $service->bookingAnswers($submittedAnswers)
+            : [];
         $amountPence = $service?->appointmentAmountPence() ?? 0;
         $paymentMethod = $data['paymentMethod'] ?? 'cash';
         if ($paymentMethod === 'pay_at_clinic') {
@@ -216,7 +219,7 @@ class BookController extends Controller
         $this->notify->bookingConfirmed($appointment->load(['clinic', 'service', 'customer']));
 
         return response()->json([
-            'data' => $appointment->toApi(),
+            'data' => $appointment->fresh(['clinic', 'service', 'intake.answers'])->toApi(),
         ], 201);
     }
 

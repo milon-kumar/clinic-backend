@@ -82,7 +82,10 @@ class PaymentController extends Controller
                 $serviceId = SlotHold::query()->whereKey($data['holdId'])->value('service_id');
             }
             $service = $serviceId ? Service::find($serviceId) : null;
-            $answers = $service?->bookingAnswers($data['answers'] ?? []) ?? [];
+            $submittedAnswers = $data['answers'] ?? [];
+            $answers = ($service && $submittedAnswers !== [])
+                ? $service->bookingAnswers($submittedAnswers)
+                : [];
             $amount = $service?->appointmentAmountPence() ?? 0;
             $payload = [
                 'holdId' => $data['holdId'] ?? null,

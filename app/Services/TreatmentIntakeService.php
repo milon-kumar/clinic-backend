@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Appointment;
 use App\Models\Order;
 use App\Models\PrepaidPackage;
 use App\Models\TreatmentIntake;
@@ -54,6 +55,7 @@ class TreatmentIntakeService
                         'treatment_intake_id' => $intake->id,
                         'prompt' => $question->prompt,
                         'answer_type' => $question->answer_type,
+                        'options' => $question->choiceOptions() === [] ? null : $question->choiceOptions(),
                         'is_required' => (bool) $question->is_required,
                         'sort_order' => $index,
                     ]);
@@ -66,6 +68,87 @@ class TreatmentIntakeService
                 ->with('answers')
                 ->where('prepaid_package_id', $package->id)
                 ->first();
+        }
+    }
+
+    /**
+     * A booking email links here so the client can submit the treatment's options.
+     */
+    public function openForAppointment(Appointment $appointment): ?TreatmentIntake
+    {
+        $existing = TreatmentIntake::query()
+            ->with('answers')
+            ->where('appointment_id', $appointment->id)
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $appointment->loadMissing('service.preQuestions');
+        $questions = $appointment->service?->preQuestions;
+        if ($questions === null || $questions->isEmpty()) {
+            return null;
+        }
+
+        try {
+            return DB::transaction(function () use ($appointment, $questions) {
+                $intake = TreatmentIntake::create([
+                    'appointment_id' => $appointment->id,
+                    'token' => Str::random(48),
+                ]);
+
+                foreach ($questions->values() as $index => $question) {
+                    TreatmentIntakeAnswer::create([
+                        'treatment_intake_id' => $intake->id,
+                        'prompt' => $question->prompt,
+                        'answer_type' => $question->answer_type,
+                        'options' => $question->choiceOptions() === [] ? null : $question->choiceOptions(),
+                        'is_required' => (bool) $question->is_required,
+                        'sort_order' => $index,
+                    ]);
+                }
+
+                $intake->load('answers');
+                $this->applySavedAnswers($intake, $appointment->question_answers ?? []);
+
+                return $intake->fresh('answers');
+            });
+        } catch (QueryException) {
+            return TreatmentIntake::query()
+                ->with('answers')
+                ->where('appointment_id', $appointment->id)
+                ->first();
+        }
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $saved
+     */
+    private function applySavedAnswers(TreatmentIntake $intake, array $saved): void
+    {
+        if ($saved === []) {
+            return;
+        }
+
+        $byPrompt = collect($saved)->keyBy(
+            fn ($row) => mb_strtolower(trim((string) ($row['prompt'] ?? '')))
+        );
+        $complete = true;
+
+        foreach ($intake->answers as $item) {
+            $row = $byPrompt->get(mb_strtolower(trim($item->prompt)));
+            $value = trim((string) ($row['answer'] ?? ''));
+            if ($item->is_required && $value === '') {
+                $complete = false;
+            }
+            if ($value !== '') {
+                $item->update(['answer' => $value]);
+            }
+        }
+
+        if ($complete) {
+            $intake->update(['submitted_at' => now()]);
         }
     }
 
@@ -83,10 +166,15 @@ class TreatmentIntakeService
                 continue;
             }
 
+            $intake->loadMissing('answers');
             $links[] = [
                 'name' => $package->service?->name ?: 'Treatment',
                 'url' => $intake->publicUrl(),
                 'packageId' => (int) $package->id,
+                'questions' => $intake->answers->map(fn (TreatmentIntakeAnswer $answer) => [
+                    'prompt' => $answer->prompt,
+                    'options' => $answer->toApi()['options'],
+                ])->values()->all(),
             ];
         }
 
@@ -119,6 +207,16 @@ class TreatmentIntakeService
                         if ($item->is_required) {
                             throw ValidationException::withMessages([
                                 'answers' => ['Choose yes or no for: '.$item->prompt],
+                            ]);
+                        }
+                        $value = '';
+                    }
+                } elseif ($item->answer_type === 'choice') {
+                    $allowed = array_values($item->options ?? []);
+                    if (! in_array($value, $allowed, true)) {
+                        if ($item->is_required) {
+                            throw ValidationException::withMessages([
+                                'answers' => ['Choose an option for: '.$item->prompt],
                             ]);
                         }
                         $value = '';

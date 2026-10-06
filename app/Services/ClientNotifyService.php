@@ -109,6 +109,8 @@ class ClientNotifyService
      */
     private function appointmentPayload(Appointment $appointment): array
     {
+        $questions = $this->intakes->openForAppointment($appointment);
+
         return [
             'siteName' => $this->siteName(),
             'customerName' => $appointment->full_name ?: $appointment->customer?->name ?: 'there',
@@ -117,6 +119,7 @@ class ClientNotifyService
             'appointmentDate' => $appointment->appointment_date?->toFormattedDateString() ?: (string) $appointment->appointment_date,
             'appointmentTime' => $appointment->appointment_time,
             'appointmentId' => $appointment->id,
+            'questionUrl' => $questions && ! $questions->submitted_at ? $questions->publicUrl() : null,
         ];
     }
 

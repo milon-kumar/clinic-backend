@@ -247,6 +247,9 @@ class Service extends Model
             if ($question->answer_type === 'yes_no' && ! in_array($answer, ['yes', 'no'], true)) {
                 $answer = '';
             }
+            if ($question->answer_type === 'choice' && ! in_array($answer, $question->choiceOptions(), true)) {
+                $answer = '';
+            }
             if ($question->is_required && $answer === '') {
                 $missing[] = $question->prompt;
             }
@@ -254,6 +257,7 @@ class Service extends Model
                 'id' => $question->id,
                 'prompt' => $question->prompt,
                 'answerType' => $question->answer_type,
+                'options' => $question->choiceOptions(),
                 'required' => (bool) $question->is_required,
                 'answer' => $answer === '' ? null : $answer,
             ];

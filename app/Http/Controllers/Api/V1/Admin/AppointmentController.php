@@ -27,7 +27,7 @@ class AppointmentController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = Appointment::query()->with(['clinic', 'service', 'customer', 'nextAppointment', 'prepaidPackage', 'previousAppointment']);
+        $query = Appointment::query()->with(['clinic', 'service', 'customer', 'nextAppointment', 'prepaidPackage', 'previousAppointment', 'intake.answers']);
         BranchScope::apply($query, $request->user());
 
         if ($status = $request->query('status')) {
@@ -61,7 +61,7 @@ class AppointmentController extends Controller
 
     public function show(Request $request, int $id): JsonResponse
     {
-        $appointment = Appointment::query()->with(['clinic', 'service', 'customer', 'nextAppointment', 'prepaidPackage', 'previousAppointment'])->findOrFail($id);
+        $appointment = Appointment::query()->with(['clinic', 'service', 'customer', 'nextAppointment', 'prepaidPackage', 'previousAppointment', 'intake.answers'])->findOrFail($id);
         BranchScope::assert($request->user(), (int) $appointment->clinic_id);
 
         return response()->json(['data' => $this->journeys->decorate($appointment)]);

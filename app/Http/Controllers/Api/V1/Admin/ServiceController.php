@@ -119,7 +119,9 @@ class ServiceController extends Controller
             'faqs' => ['nullable', 'array'],
             'preQuestions' => ['nullable', 'array'],
             'preQuestions.*.prompt' => ['nullable', 'string', 'max:500'],
-            'preQuestions.*.answerType' => ['nullable', 'string', 'in:yes_no,text'],
+            'preQuestions.*.answerType' => ['nullable', 'string', 'in:yes_no,text,choice'],
+            'preQuestions.*.options' => ['nullable', 'array', 'max:12'],
+            'preQuestions.*.options.*' => ['nullable', 'string', 'max:200'],
             'preQuestions.*.required' => ['nullable', 'boolean'],
             'isActive' => ['nullable', 'boolean'],
             'isFeatured' => ['nullable', 'boolean'],
@@ -250,11 +252,18 @@ class ServiceController extends Controller
                 if ($prompt === '') {
                     continue;
                 }
-                $type = ($question['answerType'] ?? 'text') === 'yes_no' ? 'yes_no' : 'text';
+                $type = in_array($question['answerType'] ?? '', ['yes_no', 'text', 'choice'], true)
+                    ? $question['answerType']
+                    : 'text';
+                $options = $type === 'choice' ? ServicePreQuestion::cleanOptions($question['options'] ?? []) : [];
+                if ($type === 'choice' && count($options) < 2) {
+                    continue;
+                }
                 ServicePreQuestion::create([
                     'service_id' => $service->id,
                     'prompt' => $prompt,
                     'answer_type' => $type,
+                    'options' => $options === [] ? null : $options,
                     'is_required' => array_key_exists('required', $question) ? (bool) $question['required'] : true,
                     'sort_order' => $index,
                 ]);

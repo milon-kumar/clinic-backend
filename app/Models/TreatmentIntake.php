@@ -10,6 +10,7 @@ class TreatmentIntake extends Model
 {
     protected $fillable = [
         'prepaid_package_id',
+        'appointment_id',
         'order_id',
         'token',
         'submitted_at',
@@ -30,6 +31,11 @@ class TreatmentIntake extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function appointment(): BelongsTo
+    {
+        return $this->belongsTo(Appointment::class);
     }
 
     public function answers(): HasMany
@@ -66,11 +72,13 @@ class TreatmentIntake extends Model
      */
     public function toPublicApi(): array
     {
-        $this->loadMissing(['answers', 'package.service', 'package.clinic']);
+        $this->loadMissing(['answers', 'package.service', 'package.clinic', 'appointment.service', 'appointment.clinic']);
 
         return [
-            'treatmentName' => $this->package?->service?->name ?: 'Treatment',
-            'clinicName' => $this->package?->clinic?->name,
+            'treatmentName' => $this->package?->service?->name
+                ?: $this->appointment?->service?->name
+                ?: 'Treatment',
+            'clinicName' => $this->package?->clinic?->name ?: $this->appointment?->clinic?->name,
             'orderId' => $this->order_id,
             'status' => $this->submitted_at ? 'submitted' : 'pending',
             'submittedAt' => $this->submitted_at?->toIso8601String(),

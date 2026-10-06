@@ -74,6 +74,11 @@ class Appointment extends Model
         return $this->hasOne(Review::class);
     }
 
+    public function intake(): HasOne
+    {
+        return $this->hasOne(TreatmentIntake::class);
+    }
+
     public function toApi(): array
     {
         return [
@@ -111,7 +116,13 @@ class Appointment extends Model
             'amount' => ((int) $this->amount_pence) / 100,
             'isFree' => (int) $this->amount_pence === 0,
             'notes' => $this->notes,
-            'questionAnswers' => $this->question_answers ?: [],
+            'questionAnswers' => $this->relationLoaded('intake') && $this->intake?->relationLoaded('answers')
+                ? $this->intake->answers->map(fn (TreatmentIntakeAnswer $row) => $row->toApi())->values()->all()
+                : ($this->question_answers ?: []),
+            'questionUrl' => $this->relationLoaded('intake') ? $this->intake?->publicUrl() : null,
+            'questionStatus' => $this->relationLoaded('intake')
+                ? ($this->intake?->submitted_at ? 'submitted' : ($this->intake ? 'pending' : null))
+                : null,
             'sessionNotes' => $this->session_notes,
             'previousSessionNotes' => $this->relationLoaded('previousAppointment')
                 ? $this->previousAppointment?->session_notes
