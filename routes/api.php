@@ -80,7 +80,7 @@ Route::prefix('api/v1')->group(function () {
     Route::post('stripe/webhook', [StripeWebhookController::class, 'handle']);
     Route::get('payment/config', [PaymentController::class, 'config']);
 
-    Route::middleware(['auth:sanctum', 'verified.email'])->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
         Route::put('session/clinic', [ClinicController::class, 'setSessionClinic']);
 
         Route::get('notifications', [NotificationController::class, 'index']);

@@ -59,7 +59,7 @@ class AuthApiTest extends PlatformTestCase
         $response->assertOk()->assertJsonStructure(['accessToken', 'user' => ['id', 'email', 'firstName']]);
     }
 
-    public function test_unverified_user_cannot_access_customer_portal(): void
+    public function test_signed_in_user_can_use_the_account_without_another_email_check(): void
     {
         $user = $this->createUser([
             'is_verified' => false,
@@ -68,7 +68,9 @@ class AuthApiTest extends PlatformTestCase
 
         Sanctum::actingAs($user);
 
-        $this->getJson('/api/v1/customers/me')->assertForbidden();
+        $this->getJson('/api/v1/customers/me')
+            ->assertOk()
+            ->assertJsonPath('data.email', $user->email);
     }
 
     public function test_verified_user_can_read_profile(): void
