@@ -20,15 +20,9 @@ class CatalogController extends Controller
     {
         $mode = $request->query('mode', 'all');
         $offerings = $this->catalogService->getServices($id, $mode)->map(function (array $offering) {
-            $offering['packages'] = collect($offering['packages'])->map(function ($pkg) {
-                return method_exists($pkg, 'toApi') ? $pkg->toApi() : $pkg;
-            })->all();
-            $offering['benefits'] = collect($offering['benefits'])->map(function ($item) {
-                return method_exists($item, 'toApi') ? $item->toApi() : $item;
-            })->all();
-            $offering['faqs'] = collect($offering['faqs'])->map(function ($item) {
-                return method_exists($item, 'toApi') ? $item->toApi() : $item;
-            })->all();
+            $offering['packages'] = collect($offering['packages'])->map(fn ($item) => $this->present($item))->all();
+            $offering['benefits'] = collect($offering['benefits'])->map(fn ($item) => $this->present($item))->all();
+            $offering['faqs'] = collect($offering['faqs'])->map(fn ($item) => $this->present($item))->all();
             $offering['id'] = $offering['serviceId'];
             $offering['title'] = $offering['name'];
             $offering['price'] = ($offering['pricePence'] ?? 0) / 100;
@@ -50,15 +44,24 @@ class CatalogController extends Controller
             abort(404, 'Service not offered at this clinic');
         }
 
-        $match['packages'] = collect($match['packages'])->map(fn ($p) => method_exists($p, 'toApi') ? $p->toApi() : $p)->all();
-        $match['benefits'] = collect($match['benefits'])->map(fn ($p) => method_exists($p, 'toApi') ? $p->toApi() : $p)->all();
-        $match['faqs'] = collect($match['faqs'])->map(fn ($p) => method_exists($p, 'toApi') ? $p->toApi() : $p)->all();
+        $match['packages'] = collect($match['packages'])->map(fn ($item) => $this->present($item))->all();
+        $match['benefits'] = collect($match['benefits'])->map(fn ($item) => $this->present($item))->all();
+        $match['faqs'] = collect($match['faqs'])->map(fn ($item) => $this->present($item))->all();
         $match['id'] = $service->id;
         $match['title'] = $match['name'];
         $match['images'] = array_values(array_filter($service->images ?? []));
         $match['price'] = ($match['pricePence'] ?? 0) / 100;
 
         return response()->json(['data' => $match]);
+    }
+
+    private function present(mixed $item): mixed
+    {
+        if (is_object($item) && method_exists($item, 'toApi')) {
+            return $item->toApi();
+        }
+
+        return $item;
     }
 
     public function prerequisites(int $serviceId): JsonResponse
