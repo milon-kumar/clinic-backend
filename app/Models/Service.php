@@ -288,12 +288,13 @@ class Service extends Model
             if ($prompt === '' || $answer === '') {
                 continue;
             }
+            $options = ServicePreQuestion::cleanOptions($row['options'] ?? []);
             $saved[] = [
                 'id' => null,
                 'prompt' => $prompt,
-                'answerType' => 'choice',
-                'options' => ServicePreQuestion::cleanOptions($row['options'] ?? []),
-                'required' => true,
+                'answerType' => $options === [] ? 'text' : 'choice',
+                'options' => $options,
+                'required' => false,
                 'answer' => $answer,
             ];
         }

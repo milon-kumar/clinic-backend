@@ -116,13 +116,7 @@ class Appointment extends Model
             'amount' => ((int) $this->amount_pence) / 100,
             'isFree' => (int) $this->amount_pence === 0,
             'notes' => $this->notes,
-            'questionAnswers' => $this->relationLoaded('intake') && $this->intake?->relationLoaded('answers')
-                ? $this->intake->answers->map(fn (TreatmentIntakeAnswer $row) => $row->toApi())->values()->all()
-                : ($this->question_answers ?: []),
-            'questionUrl' => $this->relationLoaded('intake') ? $this->intake?->publicUrl() : null,
-            'questionStatus' => $this->relationLoaded('intake')
-                ? ($this->intake?->submitted_at ? 'submitted' : ($this->intake ? 'pending' : null))
-                : null,
+            ...$this->questionPreview(),
             'sessionNotes' => $this->session_notes,
             'previousSessionNotes' => $this->relationLoaded('previousAppointment')
                 ? $this->previousAppointment?->session_notes
@@ -134,6 +128,52 @@ class Appointment extends Model
             'reviewId' => $this->relationLoaded('review') ? $this->review?->id : null,
             'canReview' => $this->status === 'completed'
                 && (! $this->relationLoaded('review') || $this->review === null),
+        ];
+    }
+
+    /**
+     * @return array{questionAnswers: list<array<string, mixed>>, questionUrl: ?string, questionStatus: ?string}
+     */
+    private function questionPreview(): array
+    {
+        $stored = collect($this->question_answers ?: [])
+            ->filter(fn ($row) => is_array($row) && filled($row['prompt'] ?? null))
+            ->map(fn ($row) => [
+                'id' => $row['id'] ?? null,
+                'prompt' => $row['prompt'],
+                'answerType' => $row['answerType'] ?? 'text',
+                'options' => array_values($row['options'] ?? []),
+                'required' => (bool) ($row['required'] ?? false),
+                'answer' => $row['answer'] ?? null,
+            ])
+            ->values();
+
+        $intake = $this->relationLoaded('intake') ? $this->intake : null;
+        if ($intake && $intake->relationLoaded('answers')) {
+            $known = $intake->answers
+                ->map(fn (TreatmentIntakeAnswer $row) => mb_strtolower(trim($row->prompt)))
+                ->all();
+            $extras = $stored
+                ->reject(fn ($row) => in_array(mb_strtolower(trim((string) $row['prompt'])), $known, true))
+                ->values();
+
+            return [
+                'questionAnswers' => $intake->answers
+                    ->map(fn (TreatmentIntakeAnswer $row) => $row->toApi())
+                    ->concat($extras)
+                    ->values()
+                    ->all(),
+                'questionUrl' => $intake->publicUrl(),
+                'questionStatus' => $intake->submitted_at ? 'submitted' : 'pending',
+            ];
+        }
+
+        $filled = $stored->contains(fn ($row) => filled($row['answer'] ?? null));
+
+        return [
+            'questionAnswers' => $stored->all(),
+            'questionUrl' => null,
+            'questionStatus' => $filled ? 'submitted' : null,
         ];
     }
 }
