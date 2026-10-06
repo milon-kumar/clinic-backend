@@ -60,6 +60,11 @@ class PaymentController extends Controller
             'answers' => ['nullable', 'array'],
             'answers.*.id' => ['nullable'],
             'answers.*.answer' => ['nullable', 'string', 'max:2000'],
+            'faqAnswers' => ['nullable', 'array'],
+            'faqAnswers.*.prompt' => ['nullable', 'string', 'max:500'],
+            'faqAnswers.*.answer' => ['nullable', 'string', 'max:2000'],
+            'faqAnswers.*.options' => ['nullable', 'array'],
+            'faqAnswers.*.options.*' => ['nullable', 'string', 'max:200'],
             'appointmentDate' => ['nullable'],
             'appointmentTime' => ['nullable', 'string'],
             'treatmentId' => ['nullable'],
@@ -83,9 +88,10 @@ class PaymentController extends Controller
             }
             $service = $serviceId ? Service::find($serviceId) : null;
             $submittedAnswers = $data['answers'] ?? [];
-            $answers = ($service && $submittedAnswers !== [])
-                ? $service->bookingAnswers($submittedAnswers)
-                : [];
+            $answers = array_merge(
+                ($service && $submittedAnswers !== []) ? $service->bookingAnswers($submittedAnswers) : [],
+                Service::faqAnswerRows($data['faqAnswers'] ?? []),
+            );
             $amount = $service?->appointmentAmountPence() ?? 0;
             $payload = [
                 'holdId' => $data['holdId'] ?? null,

@@ -273,6 +273,35 @@ class Service extends Model
     }
 
     /**
+     * @param  array<int, mixed>  $rows
+     * @return list<array<string, mixed>>
+     */
+    public static function faqAnswerRows(array $rows): array
+    {
+        $saved = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $prompt = trim((string) ($row['prompt'] ?? ''));
+            $answer = trim((string) ($row['answer'] ?? ''));
+            if ($prompt === '' || $answer === '') {
+                continue;
+            }
+            $saved[] = [
+                'id' => null,
+                'prompt' => $prompt,
+                'answerType' => 'choice',
+                'options' => ServicePreQuestion::cleanOptions($row['options'] ?? []),
+                'required' => true,
+                'answer' => $answer,
+            ];
+        }
+
+        return $saved;
+    }
+
+    /**
      * Category questions are tagged onto every treatment in that category.
      *
      * @return list<array<string, mixed>>

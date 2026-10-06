@@ -151,6 +151,11 @@ class BookController extends Controller
             'answers' => ['nullable', 'array'],
             'answers.*.id' => ['nullable'],
             'answers.*.answer' => ['nullable', 'string', 'max:2000'],
+            'faqAnswers' => ['nullable', 'array'],
+            'faqAnswers.*.prompt' => ['nullable', 'string', 'max:500'],
+            'faqAnswers.*.answer' => ['nullable', 'string', 'max:2000'],
+            'faqAnswers.*.options' => ['nullable', 'array'],
+            'faqAnswers.*.options.*' => ['nullable', 'string', 'max:200'],
             'paymentMethod' => ['nullable', 'in:cash,online,package,pay_at_clinic,card'],
             'packageId' => ['nullable'],
         ]);
@@ -159,9 +164,10 @@ class BookController extends Controller
         $hold = SlotHold::findOrFail($data['holdId']);
         $service = Service::find($hold->service_id);
         $submittedAnswers = $data['answers'] ?? [];
-        $answers = ($service && $submittedAnswers !== [])
-            ? $service->bookingAnswers($submittedAnswers)
-            : [];
+        $answers = array_merge(
+            ($service && $submittedAnswers !== []) ? $service->bookingAnswers($submittedAnswers) : [],
+            Service::faqAnswerRows($data['faqAnswers'] ?? []),
+        );
         $amountPence = $service?->appointmentAmountPence() ?? 0;
         $paymentMethod = $data['paymentMethod'] ?? 'cash';
         if ($paymentMethod === 'pay_at_clinic') {
