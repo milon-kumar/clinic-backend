@@ -33,10 +33,13 @@ class SiteSettingController extends Controller
             'siteName' => ['sometimes', 'required', 'string', 'max:160'],
             'logo' => ['nullable', 'string', 'max:255'],
             'favicon' => ['nullable', 'string', 'max:255'],
+            'footerQrImage' => ['nullable', 'string', 'max:255'],
+            'footerQrLink' => ['nullable', 'string', 'max:255'],
+            'footerQrLabel' => ['nullable', 'string', 'max:120'],
             'websiteUrl' => ['nullable', 'string', 'max:255'],
             'facebookUrl' => ['nullable', 'string', 'max:255'],
             'instagramUrl' => ['nullable', 'string', 'max:255'],
-            'twitterUrl' => ['nullable', 'string', 'max:255'],
+            'tiktokUrl' => ['nullable', 'string', 'max:255'],
             'linkedinUrl' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:40'],
             'whatsapp' => ['nullable', 'string', 'max:40'],
@@ -47,6 +50,8 @@ class SiteSettingController extends Controller
             'aboutShortDesc' => ['nullable', 'string', 'max:2000'],
             'aboutLongDesc' => ['nullable', 'string'],
             'aboutImage' => ['nullable', 'string', 'max:255'],
+            'homeMetaTitle' => ['nullable', 'string', 'max:160'],
+            'homeMetaDescription' => ['nullable', 'string', 'max:320'],
             'mailEnabled' => ['sometimes', 'boolean'],
             'mailFromName' => ['nullable', 'string', 'max:160'],
             'mailFromAddress' => ['nullable', 'email', 'max:160'],
@@ -125,7 +130,7 @@ class SiteSettingController extends Controller
 
         $kind = $request->input('kind', 'logo');
         $request->validate([
-            'kind' => ['nullable', 'in:logo,about,favicon'],
+            'kind' => ['nullable', 'in:logo,about,favicon,qr'],
             'file' => $kind === 'favicon'
                 ? ['required', 'file', 'extensions:png,jpg,jpeg,webp,ico,gif,svg', 'max:2048']
                 : ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
@@ -134,6 +139,7 @@ class SiteSettingController extends Controller
         $folder = match ($kind) {
             'about' => 'settings/about',
             'favicon' => 'settings/favicon',
+            'qr' => 'settings/qr',
             default => 'settings/logo',
         };
         $path = $request->file('file')->store($folder, 'public');
@@ -154,10 +160,13 @@ class SiteSettingController extends Controller
             'siteName' => 'site_name',
             'logo' => 'logo',
             'favicon' => 'favicon',
+            'footerQrImage' => 'footer_qr_image',
+            'footerQrLink' => 'footer_qr_link',
+            'footerQrLabel' => 'footer_qr_label',
             'websiteUrl' => 'website_url',
             'facebookUrl' => 'facebook_url',
             'instagramUrl' => 'instagram_url',
-            'twitterUrl' => 'twitter_url',
+            'tiktokUrl' => 'tiktok_url',
             'linkedinUrl' => 'linkedin_url',
             'phone' => 'phone',
             'whatsapp' => 'whatsapp',
@@ -168,6 +177,8 @@ class SiteSettingController extends Controller
             'aboutShortDesc' => 'about_short_desc',
             'aboutLongDesc' => 'about_long_desc',
             'aboutImage' => 'about_image',
+            'homeMetaTitle' => 'home_meta_title',
+            'homeMetaDescription' => 'home_meta_description',
             'mailEnabled' => 'mail_enabled',
             'mailFromName' => 'mail_from_name',
             'mailFromAddress' => 'mail_from_address',

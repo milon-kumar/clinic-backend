@@ -34,6 +34,7 @@ class Service extends Model
         'show_in_menu',
         'sort_order',
         'allow_local',
+        'requires_signature',
     ];
 
     protected function casts(): array
@@ -47,6 +48,7 @@ class Service extends Model
             'show_in_menu' => 'boolean',
             'sort_order' => 'integer',
             'allow_local' => 'boolean',
+            'requires_signature' => 'boolean',
         ];
     }
 
@@ -198,6 +200,7 @@ class Service extends Model
             'showInMenu' => $this->show_in_menu,
             'sortOrder' => (int) $this->sort_order,
             'allowLocal' => $this->allow_local,
+            'requiresSignature' => (bool) $this->requires_signature,
             'ratingAvg' => round((float) ($this->getAttribute('rating_avg') ?? 0), 1),
             'ratingCount' => (int) ($this->getAttribute('rating_count') ?? 0),
             'packages' => $this->relationLoaded('packages')

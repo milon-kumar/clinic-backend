@@ -72,13 +72,13 @@ class DatabaseSeeder extends Seeder
             ]));
             $clinicModels[$clinic->slug] = $clinic;
 
-            foreach ([1, 2, 3, 4, 5, 6] as $day) {
+            foreach ([1, 2, 3, 4, 5] as $day) {
                 ClinicSchedule::create([
                     'clinic_id' => $clinic->id,
                     'day_of_week' => $day,
-                    'open_time' => '09:00:00',
-                    'close_time' => '18:00:00',
-                    'slot_interval_minutes' => 60,
+                    'open_time' => '10:00:00',
+                    'close_time' => '19:00:00',
+                    'slot_interval_minutes' => 30,
                 ]);
             }
         }

@@ -41,13 +41,13 @@ class ClinicController extends Controller
         $data = $this->validatedClinic($request);
         $clinic = Clinic::create($this->clinicAttrs($data));
 
-        foreach ([1, 2, 3, 4, 5, 6] as $day) {
+        foreach ([1, 2, 3, 4, 5] as $day) {
             ClinicSchedule::create([
                 'clinic_id' => $clinic->id,
                 'day_of_week' => $day,
-                'open_time' => '09:00:00',
-                'close_time' => '18:00:00',
-                'slot_interval_minutes' => 60,
+                'open_time' => '10:00:00',
+                'close_time' => '19:00:00',
+                'slot_interval_minutes' => 30,
             ]);
         }
 
@@ -188,7 +188,7 @@ class ClinicController extends Controller
             'day_of_week' => $data['dayOfWeek'],
             'open_time' => $data['openTime'],
             'close_time' => $data['closeTime'],
-            'slot_interval_minutes' => $data['slotIntervalMinutes'] ?? 60,
+            'slot_interval_minutes' => $data['slotIntervalMinutes'] ?? 30,
         ]);
 
         return response()->json(['data' => [

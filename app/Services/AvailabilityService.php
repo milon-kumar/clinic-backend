@@ -12,11 +12,15 @@ use Illuminate\Support\Collection;
 
 class AvailabilityService
 {
-    public const TIME_SLOTS = [
-        '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
-        '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM',
-        '05:00 PM', '06:00 PM', '07:00 PM', '08:00 PM', '09:00 PM',
-    ];
+    /** Appointment / meeting length and slot spacing, in minutes. */
+    public const APPOINTMENT_MINUTES = 30;
+
+    /** Used when a clinic has no schedule rows: Mon-Fri, 10:00 - 19:00. */
+    public const DEFAULT_OPEN = '10:00';
+
+    public const DEFAULT_CLOSE = '19:00';
+
+    public const DEFAULT_DAYS = [1, 2, 3, 4, 5];
 
     /**
      * @param  array<int>  $serviceIds
@@ -50,17 +54,35 @@ class AvailabilityService
             $dayOfWeek = $date->dayOfWeek;
             $schedule = $schedules->get($dayOfWeek);
 
-            if (! $schedule) {
-                if ($schedules->isNotEmpty()) {
+            if ($schedules->isNotEmpty()) {
+                if (! $schedule) {
                     continue;
                 }
+                $open = substr((string) $schedule->open_time, 0, 5);
+                $close = substr((string) $schedule->close_time, 0, 5);
+                $interval = max(5, (int) ($schedule->slot_interval_minutes ?: self::APPOINTMENT_MINUTES));
+            } else {
+                if (! in_array($dayOfWeek, self::DEFAULT_DAYS, true)) {
+                    continue;
+                }
+                $open = self::DEFAULT_OPEN;
+                $close = self::DEFAULT_CLOSE;
+                $interval = self::APPOINTMENT_MINUTES;
             }
 
             if ($this->isClosedOnDate($closures, $date)) {
                 continue;
             }
 
-            foreach (self::TIME_SLOTS as $timeLabel) {
+            $cursor = Carbon::parse($date->format('Y-m-d').' '.$open);
+            $closeAt = Carbon::parse($date->format('Y-m-d').' '.$close);
+            $labels = [];
+            while ($cursor->copy()->addMinutes(self::APPOINTMENT_MINUTES)->lte($closeAt)) {
+                $labels[] = $cursor->format('h:i A');
+                $cursor->addMinutes($interval);
+            }
+
+            foreach ($labels as $timeLabel) {
                 $slotStart = Carbon::parse($date->format('Y-m-d').' '.$timeLabel);
                 $slotKey = $slotStart->format('Y-m-d H:i');
 

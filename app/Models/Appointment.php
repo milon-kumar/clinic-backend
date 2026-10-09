@@ -165,6 +165,9 @@ class Appointment extends Model
                     ->all(),
                 'questionUrl' => $intake->publicUrl(),
                 'questionStatus' => $intake->submitted_at ? 'submitted' : 'pending',
+                'signature' => $intake->signature,
+                'signedName' => $intake->signed_name,
+                'signedAt' => $intake->signed_at?->toIso8601String(),
             ];
         }
 
@@ -174,6 +177,9 @@ class Appointment extends Model
             'questionAnswers' => $stored->all(),
             'questionUrl' => null,
             'questionStatus' => $filled ? 'submitted' : null,
+            'signature' => null,
+            'signedName' => null,
+            'signedAt' => null,
         ];
     }
 }

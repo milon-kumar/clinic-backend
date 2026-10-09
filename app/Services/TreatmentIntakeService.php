@@ -38,7 +38,7 @@ class TreatmentIntakeService
 
         $package->loadMissing('service');
         $questions = $package->service?->bookingQuestionRows() ?? [];
-        if ($questions === []) {
+        if ($questions === [] && ! $package->service?->requires_signature) {
             return null;
         }
 
@@ -74,7 +74,7 @@ class TreatmentIntakeService
 
         $appointment->loadMissing('service');
         $questions = $appointment->service?->bookingQuestionRows() ?? [];
-        if ($questions === []) {
+        if ($questions === [] && ! $appointment->service?->requires_signature) {
             return $existing;
         }
 
@@ -169,7 +169,7 @@ class TreatmentIntakeService
             }
         }
 
-        if ($complete) {
+        if ($complete && ! $intake->requiresSignature()) {
             $intake->update(['submitted_at' => now()]);
         }
     }
@@ -219,7 +219,7 @@ class TreatmentIntakeService
     /**
      * @param  array<int, array<string, mixed>>  $rows
      */
-    public function submit(string $token, array $rows): TreatmentIntake
+    public function submit(string $token, array $rows, ?string $signature = null, ?string $signedName = null): TreatmentIntake
     {
         $intake = $this->findByToken($token);
 
@@ -229,9 +229,21 @@ class TreatmentIntakeService
             ]);
         }
 
+        $signature = $signature !== null ? trim($signature) : null;
+        if ($intake->requiresSignature()) {
+            if (! $signature) {
+                throw ValidationException::withMessages(['signature' => ['Please sign before submitting.']]);
+            }
+            if (! preg_match('#^data:image/png;base64,[A-Za-z0-9+/=]+$#', $signature)) {
+                throw ValidationException::withMessages(['signature' => ['The signature is not valid.']]);
+            }
+        } else {
+            $signature = null;
+        }
+
         $byId = collect($rows)->keyBy(fn ($row) => (int) ($row['id'] ?? 0));
 
-        DB::transaction(function () use ($intake, $byId) {
+        DB::transaction(function () use ($intake, $byId, $signature, $signedName) {
             foreach ($intake->answers as $item) {
                 $raw = $byId->get($item->id)['answer'] ?? '';
                 $value = trim((string) $raw);
@@ -271,7 +283,12 @@ class TreatmentIntakeService
                 $item->update(['answer' => $value !== '' ? $value : null]);
             }
 
-            $intake->update(['submitted_at' => now()]);
+            $intake->update([
+                'submitted_at' => now(),
+                'signature' => $signature,
+                'signed_name' => $signature ? (trim((string) $signedName) ?: null) : null,
+                'signed_at' => $signature ? now() : null,
+            ]);
         });
 
         return $intake->fresh(['answers', 'package.service', 'package.clinic']);

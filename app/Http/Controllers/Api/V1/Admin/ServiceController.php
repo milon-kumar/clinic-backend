@@ -128,6 +128,7 @@ class ServiceController extends Controller
             'showInMenu' => ['nullable', 'boolean'],
             'sortOrder' => ['nullable', 'integer', 'min:0'],
             'allowLocal' => ['nullable', 'boolean'],
+            'requiresSignature' => ['nullable', 'boolean'],
             'supportsBuy' => ['nullable', 'boolean'],
             'supportsBook' => ['nullable', 'boolean'],
             'offerAtAllClinics' => ['nullable', 'boolean'],
@@ -164,6 +165,7 @@ class ServiceController extends Controller
             'is_featured' => $data['isFeatured'] ?? false,
             'show_in_menu' => $data['showInMenu'] ?? true,
             'allow_local' => $data['allowLocal'] ?? false,
+            'requires_signature' => $data['requiresSignature'] ?? false,
             'supports_buy' => $data['supportsBuy'] ?? true,
             'supports_book' => $data['supportsBook'] ?? true,
         ];

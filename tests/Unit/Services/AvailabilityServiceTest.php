@@ -72,7 +72,7 @@ class AvailabilityServiceTest extends PlatformTestCase
         $clinic = $this->createClinic();
         ClinicSchedule::query()->where('clinic_id', $clinic->id)->delete();
         $service = $this->createService();
-        $date = now()->next(Carbon::SUNDAY)->startOfDay();
+        $date = now()->next(Carbon::MONDAY)->startOfDay();
 
         $slots = app(AvailabilityService::class)->getSlots(
             $clinic->id,
@@ -81,6 +81,28 @@ class AvailabilityServiceTest extends PlatformTestCase
             $date->copy()->endOfDay()
         );
 
-        $this->assertContains('10:00 AM', $slots->pluck('timeLabel')->all());
+        $labels = $slots->pluck('timeLabel')->all();
+        $this->assertContains('10:00 AM', $labels);
+        $this->assertContains('10:30 AM', $labels);
+        $this->assertContains('06:30 PM', $labels);
+        $this->assertNotContains('09:30 AM', $labels);
+        $this->assertNotContains('07:00 PM', $labels);
+    }
+
+    public function test_weekends_are_closed_with_default_hours(): void
+    {
+        $clinic = $this->createClinic();
+        ClinicSchedule::query()->where('clinic_id', $clinic->id)->delete();
+        $service = $this->createService();
+        $date = now()->next(Carbon::SATURDAY)->startOfDay();
+
+        $slots = app(AvailabilityService::class)->getSlots(
+            $clinic->id,
+            [$service->id],
+            $date,
+            $date->copy()->endOfDay()
+        );
+
+        $this->assertCount(0, $slots);
     }
 }

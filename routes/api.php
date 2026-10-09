@@ -25,6 +25,8 @@ use App\Http\Controllers\Api\V1\CatalogController;
 use App\Http\Controllers\Api\V1\ClinicController;
 use App\Http\Controllers\Api\V1\IntakeController;
 use App\Http\Controllers\Api\V1\ContactController;
+use App\Http\Controllers\Api\V1\ContentPageController;
+use App\Http\Controllers\Api\V1\Admin\ContentPageController as AdminContentPageController;
 use App\Http\Controllers\Api\V1\CustomerController;
 use App\Http\Controllers\Api\V1\DoctorController;
 use App\Http\Controllers\Api\V1\NotificationController;
@@ -72,6 +74,8 @@ Route::prefix('api/v1')->group(function () {
     Route::get('landings', [CategoryLandingController::class, 'index']);
     Route::get('landings/{slug}', [CategoryLandingController::class, 'show']);
     Route::get('mother-categories', [MotherCategoryController::class, 'index']);
+    Route::get('pages', [ContentPageController::class, 'index']);
+    Route::get('pages/{slug}', [ContentPageController::class, 'show'])->where('slug', '[a-z0-9\-]+');
     Route::post('contact', [ContactController::class, 'store']);
     Route::get('reviews', [ReviewController::class, 'index']);
     Route::get('doctors', [DoctorController::class, 'index']);
@@ -171,6 +175,11 @@ Route::prefix('api/v1')->group(function () {
             Route::post('mother-categories', [AdminMotherCategoryController::class, 'store']);
             Route::patch('mother-categories/{id}', [AdminMotherCategoryController::class, 'update'])->whereNumber('id');
             Route::delete('mother-categories/{id}', [AdminMotherCategoryController::class, 'destroy'])->whereNumber('id');
+
+            Route::get('pages', [AdminContentPageController::class, 'index']);
+            Route::post('pages', [AdminContentPageController::class, 'store']);
+            Route::patch('pages/{id}', [AdminContentPageController::class, 'update'])->whereNumber('id');
+            Route::delete('pages/{id}', [AdminContentPageController::class, 'destroy'])->whereNumber('id');
 
             Route::get('roles', [AdminRoleController::class, 'index']);
             Route::apiResource('users', AdminUserController::class);

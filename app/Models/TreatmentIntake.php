@@ -13,6 +13,9 @@ class TreatmentIntake extends Model
         'appointment_id',
         'order_id',
         'token',
+        'signature',
+        'signed_name',
+        'signed_at',
         'submitted_at',
     ];
 
@@ -20,6 +23,7 @@ class TreatmentIntake extends Model
     {
         return [
             'submitted_at' => 'datetime',
+            'signed_at' => 'datetime',
         ];
     }
 
@@ -43,6 +47,14 @@ class TreatmentIntake extends Model
         return $this->hasMany(TreatmentIntakeAnswer::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    public function requiresSignature(): bool
+    {
+        $this->loadMissing(['package.service', 'appointment.service']);
+
+        return (bool) ($this->package?->service?->requires_signature
+            ?: $this->appointment?->service?->requires_signature);
+    }
+
     public function publicUrl(): string
     {
         $raw = (string) config('app.frontend_url', 'http://localhost:3000');
@@ -61,6 +73,10 @@ class TreatmentIntake extends Model
             'submittedAt' => $this->submitted_at?->toIso8601String(),
             'token' => $this->token,
             'url' => $this->publicUrl(),
+            'requiresSignature' => $this->requiresSignature(),
+            'signature' => $this->signature,
+            'signedName' => $this->signed_name,
+            'signedAt' => $this->signed_at?->toIso8601String(),
             'questions' => $this->relationLoaded('answers')
                 ? $this->answers->map(fn (TreatmentIntakeAnswer $row) => $row->toApi())->values()->all()
                 : [],
@@ -80,6 +96,10 @@ class TreatmentIntake extends Model
                 ?: 'Treatment',
             'clinicName' => $this->package?->clinic?->name ?: $this->appointment?->clinic?->name,
             'orderId' => $this->order_id,
+            'requiresSignature' => $this->requiresSignature(),
+            'signature' => $this->signature,
+            'signedName' => $this->signed_name,
+            'signedAt' => $this->signed_at?->toIso8601String(),
             'status' => $this->submitted_at ? 'submitted' : 'pending',
             'submittedAt' => $this->submitted_at?->toIso8601String(),
             'questions' => $this->answers->map(fn (TreatmentIntakeAnswer $row) => $row->toApi())->values()->all(),
